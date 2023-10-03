@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.text import slugify
 
-from task_manager.models import Position, Worker, Team
+from task_manager.models import Position, Worker, Team, Project
 
 
 class ModelsTests(TestCase):
@@ -50,3 +50,39 @@ class ModelsTests(TestCase):
             name=name,
         )
         self.assertEquals(str(team), name)
+
+    def test_create_project_without_slug(self):
+        name = "Test project"
+        team = Team.objects.create(name="Flaming Testers")
+        project = Project(
+            name=name,
+            working_team=team,
+        )
+        self.assertEquals(project.slug, slugify(name))
+
+    def test_project_str(self):
+        name = "Test project"
+        team = Team.objects.create(
+            name="Flaming Testers",
+        )
+        project = Project.objects.create(
+            name=name,
+            working_team=team,
+        )
+        self.assertEquals(str(project), name)
+
+    def test_project_absolute_url(self):
+        team_slug = "flaming_testers"
+        team = Team.objects.create(
+            name="Flaming Testers",
+            slug=team_slug,
+        )
+        project_slug = "test_project"
+        project = Project.objects.create(
+            name="Test project",
+            slug=project_slug,
+            working_team=team,
+        )
+        self.assertEquals(
+            project.get_absolute_url(),
+            f"/{team_slug}/{project_slug}/")
