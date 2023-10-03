@@ -10,3 +10,13 @@ class Position(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Worker(AbstractUser):
+    position = models.ForeignKey(Position, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ["position", "first_name", "last_name"]
+
+    def __str__(self):
+        return f"{self.position}: {self.first_name} {self.last_name}"
