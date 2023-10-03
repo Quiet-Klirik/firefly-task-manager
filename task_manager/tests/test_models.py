@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils.text import slugify
 
-from task_manager.models import Position, Worker
+from task_manager.models import Position, Worker, Team
 
 
 class ModelsTests(TestCase):
@@ -37,3 +38,15 @@ class ModelsTests(TestCase):
             password=password,
         )
         self.assertEquals(str(worker), f"{position}: {first_name} {last_name}")
+
+    def test_create_team_without_slug(self):
+        name = "Flaming Testers"
+        team = Team.objects.create(name=name)
+        self.assertEquals(team.slug, slugify(name))
+
+    def test_team_str(self):
+        name = "Flaming Testers"
+        team = Team.objects.create(
+            name=name,
+        )
+        self.assertEquals(str(team), name)
