@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.text import slugify
 
-from task_manager.models import Position, Worker, Team, Project
+from task_manager.models import Position, Worker, Team, Project, Tag
 
 
 class ModelsTests(TestCase):
@@ -86,3 +86,8 @@ class ModelsTests(TestCase):
         self.assertEquals(
             project.get_absolute_url(),
             f"/{team_slug}/{project_slug}/")
+
+    def test_tag_str(self):
+        name = "test_tag"
+        tag = Tag.objects.create(name=name)
+        self.assertEquals(str(tag), name)
