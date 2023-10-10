@@ -108,3 +108,46 @@ class TaskType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Task(models.Model):
+    class Priority(models.TextChoices):
+        CRITICAL = "6", "Critical"
+        URGENT = "5", "Urgent"
+        HIGH = "4", "High"
+        MIDDLE = "3", "Middle"
+        LOW = "2", "Low"
+        OPTIONAL = "1", "Optional"
+        UNKNOWN = "0", "Unknown"
+    name = models.CharField(max_length=255, unique=True)
+    tags = models.ManyToManyField(Tag)
+    description = models.TextField()
+    deadline = models.DateField()
+    is_completed = models.BooleanField()
+    priority = models.PositiveSmallIntegerField(
+        choices=Priority.choices,
+        default=Priority.UNKNOWN
+    )
+    task_type = models.ForeignKey(TaskType, on_delete=models.CASCADE)
+    assignees = models.ManyToManyField(Worker)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    requester = models.ForeignKey(Worker, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ["name"]
+
+    def get_priority_display(self):
+        return self.Priority(self.priority).label
+
+    def get_absolute_url(self):
+        return reverse(
+            "task_manager:task-detail",
+            kwargs={
+                "team_slug": self.project.working_team.slug,
+                "project_slug": self.project.slug,
+                "task_id": self.id
+            }
+        )
+
+    def __str__(self):
+        return self.name

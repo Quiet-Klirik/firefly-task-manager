@@ -2,7 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.text import slugify
 
-from task_manager.models import Position, Worker, Team, Project, Tag, TaskType
+from task_manager.models import Position, Worker, Team, Project, Tag, TaskType, \
+    Task
 
 
 class ModelsTests(TestCase):
@@ -96,3 +97,55 @@ class ModelsTests(TestCase):
         name = "test_task"
         task_type = TaskType.objects.create(name=name)
         self.assertEquals(str(task_type), name)
+
+    def test_task_absolute_url(self):
+        task_type = TaskType.objects.create(name="test_task")
+        team_slug = "flaming_testers"
+        team = Team.objects.create(name="Flaming Testers", slug=team_slug)
+        project_slug = "test_project"
+        project = Project.objects.create(
+            name="Test project",
+            slug=project_slug,
+            working_team=team
+        )
+        requester = Worker.objects.create(username="test.requester")
+        task_id = 1
+        name = "test_task"
+        task = Task(
+            id=task_id,
+            name=name,
+            task_type=task_type,
+            project=project,
+            requester=requester
+        )
+        self.assertEquals(
+            task.get_absolute_url(),
+            f"/{team_slug}/{project_slug}/task/{task_id}")
+
+    @staticmethod
+    def create_task_instance(name: str) -> Task:
+        task_type = TaskType.objects.create(name="test_task")
+        team = Team.objects.create(name="Flaming Testers")
+        project = Project.objects.create(
+            name="Test project",
+            working_team=team
+        )
+        requester = Worker.objects.create(username="test.requester")
+        task = Task(
+            name=name,
+            task_type=task_type,
+            project=project,
+            requester=requester
+        )
+        return task
+
+    def test_task_get_priority_display(self):
+        task = self.create_task_instance(name="test_task")
+        task.priority = task.Priority.OPTIONAL
+        task.save()
+        self.assertEquals(task.get_priority_display(), "Optional")
+
+    def test_task_str(self):
+        name = "test_task"
+        task = self.create_task_instance(name=name)
+        self.assertEquals(str(task), name)
