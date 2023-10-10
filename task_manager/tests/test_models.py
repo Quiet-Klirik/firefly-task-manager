@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.text import slugify
 
-from task_manager.models import Position, Worker, Team, Project, Tag
+from task_manager.models import Position, Worker, Team, Project, Tag, TaskType
 
 
 class ModelsTests(TestCase):
@@ -91,3 +91,8 @@ class ModelsTests(TestCase):
         name = "test_tag"
         tag = Tag.objects.create(name=name)
         self.assertEquals(str(tag), name)
+
+    def test_task_type_str(self):
+        name = "test_task"
+        task_type = TaskType.objects.create(name=name)
+        self.assertEquals(str(task_type), name)
