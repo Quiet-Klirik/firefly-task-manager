@@ -5,147 +5,145 @@ from django.utils.text import slugify
 from task_manager.models import Position, Worker, Team, Project, Tag, TaskType, \
     Task
 
+POSITION_NAME = "Tester"
+WORKER_USERNAME = "test.username"
+WORKER_FIRST_NAME = "test_first"
+WORKER_LAST_NAME = "test_last"
+WORKER_PASSWORD = "test_password"
+TEAM_NAME = "Flaming Testers"
+TEAM_SLUG = "flaming_testers"
+PROJECT_NAME = "Test project"
+PROJECT_SLUG = "test_project"
+TAG_NAME = "test_tag"
+TASK_TYPE_NAME = "test_task"
+TASK_ID = 1
+TASK_NAME = "Test task"
+
 
 class ModelsTests(TestCase):
-    def test_position_str(self):
-        name = "Tester"
-        position = Position.objects.create(name=name)
-        self.assertEquals(str(position), name)
+    @staticmethod
+    def load_test_position():
+        position = Position.objects.create(name=POSITION_NAME)
+        return position
 
-    def test_create_worker_with_position(self):
-        username = "test.username"
-        password = "test_password"
-        position = Position.objects.create(name="Tester")
+    def load_test_worker(self):
+        position = self.load_test_position()
         worker = get_user_model().objects.create_user(
             position=position,
-            username=username,
-            password=password,
+            username=WORKER_USERNAME,
+            password=WORKER_PASSWORD,
         )
-        self.assertEquals(worker.position, position)
-        self.assertEquals(worker.username, username)
-        self.assertTrue(worker.check_password(password))
+        return worker
 
-    def test_worker_str(self):
-        position = Position.objects.create(name="Tester")
-        username = "test.username"
-        first_name = "test_first"
-        last_name = "test_last"
-        password = "test_password"
-        worker = Worker.objects.create(
-            position=position,
-            username=username,
-            first_name=first_name,
-            last_name=last_name,
-            password=password,
-        )
-        self.assertEquals(str(worker), f"{position}: {first_name} {last_name}")
-
-    def test_create_team_without_slug(self):
-        name = "Flaming Testers"
-        team = Team.objects.create(name=name)
-        self.assertEquals(team.slug, slugify(name))
-
-    def test_team_str(self):
-        name = "Flaming Testers"
+    def load_test_team(self):
+        worker = self.load_test_worker()
         team = Team.objects.create(
-            name=name,
+            name=TEAM_NAME,
+            slug=TEAM_SLUG
         )
-        self.assertEquals(str(team), name)
+        team.members.add(worker)
+        return team
 
-    def test_create_project_without_slug(self):
-        name = "Test project"
-        team = Team.objects.create(name="Flaming Testers")
-        project = Project(
-            name=name,
-            working_team=team,
-        )
-        self.assertEquals(project.slug, slugify(name))
-
-    def test_project_str(self):
-        name = "Test project"
-        team = Team.objects.create(
-            name="Flaming Testers",
-        )
+    def load_test_project(self):
+        team = self.load_test_team()
         project = Project.objects.create(
-            name=name,
-            working_team=team,
-        )
-        self.assertEquals(str(project), name)
-
-    def test_project_absolute_url(self):
-        team_slug = "flaming_testers"
-        team = Team.objects.create(
-            name="Flaming Testers",
-            slug=team_slug,
-        )
-        project_slug = "test_project"
-        project = Project.objects.create(
-            name="Test project",
-            slug=project_slug,
-            working_team=team,
-        )
-        self.assertEquals(
-            project.get_absolute_url(),
-            f"/{team_slug}/{project_slug}/")
-
-    def test_tag_str(self):
-        name = "test_tag"
-        tag = Tag.objects.create(name=name)
-        self.assertEquals(str(tag), name)
-
-    def test_task_type_str(self):
-        name = "test_task"
-        task_type = TaskType.objects.create(name=name)
-        self.assertEquals(str(task_type), name)
-
-    def test_task_absolute_url(self):
-        task_type = TaskType.objects.create(name="test_task")
-        team_slug = "flaming_testers"
-        team = Team.objects.create(name="Flaming Testers", slug=team_slug)
-        project_slug = "test_project"
-        project = Project.objects.create(
-            name="Test project",
-            slug=project_slug,
+            name=PROJECT_NAME,
+            slug=PROJECT_SLUG,
             working_team=team
         )
-        requester = Worker.objects.create(username="test.requester")
-        task_id = 1
-        name = "test_task"
-        task = Task(
-            id=task_id,
-            name=name,
-            task_type=task_type,
-            project=project,
-            requester=requester
-        )
-        self.assertEquals(
-            task.get_absolute_url(),
-            f"/{team_slug}/{project_slug}/task/{task_id}")
+        return project
 
     @staticmethod
-    def create_task_instance(name: str) -> Task:
-        task_type = TaskType.objects.create(name="test_task")
-        team = Team.objects.create(name="Flaming Testers")
-        project = Project.objects.create(
-            name="Test project",
-            working_team=team
-        )
-        requester = Worker.objects.create(username="test.requester")
-        task = Task(
-            name=name,
+    def load_test_tag():
+        tag = Tag.objects.create(name=TAG_NAME)
+        return tag
+
+    @staticmethod
+    def load_test_task_type():
+        task_type = TaskType.objects.create(name=TASK_TYPE_NAME)
+        return task_type
+
+    def load_test_task(self):
+        project = self.load_test_project()
+        worker = self.load_test_worker()
+        tag = self.load_test_tag()
+        task_type = self.load_test_task_type()
+        task = Task.objects.create(
+            id=TASK_ID,
+            name=TASK_NAME,
             task_type=task_type,
             project=project,
-            requester=requester
+            requester=worker
         )
+        task.tags.add(tag)
+        task.assignees.add(worker)
         return task
 
+    def test_position_str(self):
+        position = self.load_test_position()
+        self.assertEquals(str(position), POSITION_NAME)
+
+    def test_create_worker_with_position(self):
+        position = self.load_test_position()
+        worker = self.load_test_worker()
+        self.assertEquals(worker.position, position)
+        self.assertEquals(worker.username, WORKER_USERNAME)
+        self.assertTrue(worker.check_password(WORKER_PASSWORD))
+
+    def test_worker_str(self):
+        position = self.load_test_position()
+        worker = self.load_test_worker()
+        self.assertEquals(
+            str(worker),
+            f"{position}: {WORKER_FIRST_NAME} {WORKER_LAST_NAME}"
+        )
+
+    def test_create_team_without_slug(self):
+        team = Team.objects.create(name=TEAM_NAME)
+        self.assertEquals(team.slug, slugify(TEAM_NAME))
+
+    def test_team_str(self):
+        team = self.load_test_team()
+        self.assertEquals(str(team), TEAM_NAME)
+
+    def test_create_project_without_slug(self):
+        team = self.load_test_team()
+        project = Project(
+            name=PROJECT_NAME,
+            working_team=team,
+        )
+        self.assertEquals(project.slug, slugify(PROJECT_NAME))
+
+    def test_project_str(self):
+        project = self.load_test_project()
+        self.assertEquals(str(project), PROJECT_NAME)
+
+    def test_project_absolute_url(self):
+        project = self.load_test_project()
+        self.assertEquals(
+            project.get_absolute_url(),
+            f"/{TEAM_SLUG}/{PROJECT_SLUG}/")
+
+    def test_tag_str(self):
+        tag = self.load_test_tag()
+        self.assertEquals(str(tag), TAG_NAME)
+
+    def test_task_type_str(self):
+        task_type = self.load_test_task_type()
+        self.assertEquals(str(task_type), TASK_TYPE_NAME)
+
+    def test_task_absolute_url(self):
+        task = self.load_test_task()
+        self.assertEquals(
+            task.get_absolute_url(),
+            f"/{TEAM_SLUG}/{PROJECT_SLUG}/task/{TASK_ID}")
+
     def test_task_get_priority_display(self):
-        task = self.create_task_instance(name="test_task")
+        task = self.load_test_task()
         task.priority = task.Priority.OPTIONAL
         task.save()
         self.assertEquals(task.get_priority_display(), "Optional")
 
     def test_task_str(self):
-        name = "test_task"
-        task = self.create_task_instance(name=name)
-        self.assertEquals(str(task), name)
+        task = self.load_test_task()
+        self.assertEquals(str(task), TASK_NAME)
