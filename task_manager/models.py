@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
@@ -27,7 +28,7 @@ class Worker(AbstractUser):
 class Team(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=255, unique=True)
-    members = models.ManyToManyField(Worker)
+    members = models.ManyToManyField(get_user_model())
 
     class Meta:
         ordering = ["name"]
@@ -129,9 +130,9 @@ class Task(models.Model):
         default=Priority.UNKNOWN
     )
     task_type = models.ForeignKey(TaskType, on_delete=models.CASCADE)
-    assignees = models.ManyToManyField(Worker)
+    assignees = models.ManyToManyField(get_user_model())
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    requester = models.ForeignKey(Worker, on_delete=models.CASCADE)
+    requester = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     class Meta:
         ordering = ["name"]
@@ -162,3 +163,26 @@ class NotificationType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    notification_type = models.ForeignKey(
+        NotificationType,
+        on_delete=models.CASCADE
+    )
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-sent_at"]
+
+    @property
+    def message_text(self) -> str:
+        return self.notification_type.message_template.format(task=self.task)
+
+    def __str__(self):
+        return (f"{self.notification_type.name}: "
+                f"{self.task.name}, "
+                f"{self.sent_at.strftime('%d.%m.%Y %H:%M:%S')}")

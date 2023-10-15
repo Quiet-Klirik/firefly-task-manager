@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.text import slugify
@@ -9,7 +11,8 @@ from task_manager.models import (
     Tag,
     TaskType,
     Task,
-    NotificationType
+    NotificationType,
+    Notification
 )
 
 POSITION_NAME = "Tester"
@@ -26,8 +29,9 @@ TASK_TYPE_NAME = "test_task"
 TASK_ID = 1
 TASK_NAME = "Test task"
 NOTIFICATION_TYPE_NAME = "test_message"
-NOTIFICATION_TYPE_MESSAGE_TEMPLATE = ("Message about task \"{task_name}\" "
-                                      "from {receiver}")
+NOTIFICATION_TYPE_MESSAGE_TEMPLATE = ("Message about task \"{task.name}\" "
+                                      "from {task.requester}")
+NOTIFICATION_SENT_AT = datetime(2020, 2, 2, 22, 22, 22)
 
 
 class ModelsTests(TestCase):
@@ -91,11 +95,23 @@ class ModelsTests(TestCase):
 
     @staticmethod
     def load_test_notification_type():
-        message_type = NotificationType.objects.create(
+        notification_type = NotificationType.objects.create(
             name=NOTIFICATION_TYPE_NAME,
             message_template=NOTIFICATION_TYPE_MESSAGE_TEMPLATE
         )
-        return message_type
+        return notification_type
+
+    def load_test_notification(self):
+        user = self.load_test_worker()
+        notification_type = self.load_test_notification_type()
+        task = self.load_test_task()
+        notification = Notification.objects.create(
+            user=user,
+            notification_type=notification_type,
+            task=task,
+            sent_at=NOTIFICATION_SENT_AT,
+        )
+        return notification
 
     def test_position_str(self):
         position = self.load_test_position()
@@ -104,6 +120,7 @@ class ModelsTests(TestCase):
     def test_create_worker_with_position(self):
         position = self.load_test_position()
         worker = self.load_test_worker()
+        worker.position = position
         self.assertEquals(worker.position, position)
         self.assertEquals(worker.username, WORKER_USERNAME)
         self.assertTrue(worker.check_password(WORKER_PASSWORD))
@@ -169,3 +186,19 @@ class ModelsTests(TestCase):
     def test_notification_type_str(self):
         notification_type = self.load_test_notification_type()
         self.assertEquals(str(notification_type), NOTIFICATION_TYPE_NAME)
+
+    def test_notification_str(self):
+        notification = self.load_test_notification()
+        notification_string = (
+            f"{NOTIFICATION_TYPE_NAME}: "
+            f"{TASK_NAME}, "
+            f"{NOTIFICATION_SENT_AT.strftime('%d.%m.%Y %H:%M:%S')}"
+        )
+        self.assertEquals(str(notification), notification_string)
+
+    def test_notification_get_message_text(self):
+        task = self.load_test_task()
+        notification = self.load_test_notification()
+        notification.task = task
+        message_text = NOTIFICATION_TYPE_MESSAGE_TEMPLATE.format(task=task)
+        self.assertEquals(notification.message_text, message_text)
