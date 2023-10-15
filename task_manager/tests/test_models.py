@@ -2,8 +2,15 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils.text import slugify
 
-from task_manager.models import Position, Worker, Team, Project, Tag, TaskType, \
-    Task
+from task_manager.models import (
+    Position,
+    Team,
+    Project,
+    Tag,
+    TaskType,
+    Task,
+    NotificationType
+)
 
 POSITION_NAME = "Tester"
 WORKER_USERNAME = "test.username"
@@ -18,6 +25,9 @@ TAG_NAME = "test_tag"
 TASK_TYPE_NAME = "test_task"
 TASK_ID = 1
 TASK_NAME = "Test task"
+NOTIFICATION_TYPE_NAME = "test_message"
+NOTIFICATION_TYPE_MESSAGE_TEMPLATE = ("Message about task \"{task_name}\" "
+                                      "from {receiver}")
 
 
 class ModelsTests(TestCase):
@@ -78,6 +88,14 @@ class ModelsTests(TestCase):
         task.tags.add(tag)
         task.assignees.add(worker)
         return task
+
+    @staticmethod
+    def load_test_notification_type():
+        message_type = NotificationType.objects.create(
+            name=NOTIFICATION_TYPE_NAME,
+            message_template=NOTIFICATION_TYPE_MESSAGE_TEMPLATE
+        )
+        return message_type
 
     def test_position_str(self):
         position = self.load_test_position()
@@ -147,3 +165,7 @@ class ModelsTests(TestCase):
     def test_task_str(self):
         task = self.load_test_task()
         self.assertEquals(str(task), TASK_NAME)
+
+    def test_notification_type_str(self):
+        notification_type = self.load_test_notification_type()
+        self.assertEquals(str(notification_type), NOTIFICATION_TYPE_NAME)
