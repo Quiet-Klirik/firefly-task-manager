@@ -37,12 +37,16 @@ NOTIFICATION_SENT_AT = datetime(2020, 2, 2, 22, 22, 22)
 class ModelsTests(TestCase):
     @staticmethod
     def load_test_position():
-        position = Position.objects.create(name=POSITION_NAME)
+        position = Position.objects.create(
+            id=1,
+            name=POSITION_NAME
+        )
         return position
 
     def load_test_worker(self):
         position = self.load_test_position()
         worker = get_user_model().objects.create_user(
+            id=1,
             position=position,
             username=WORKER_USERNAME,
             password=WORKER_PASSWORD,
@@ -52,6 +56,7 @@ class ModelsTests(TestCase):
     def load_test_team(self):
         worker = self.load_test_worker()
         team = Team.objects.create(
+            id=1,
             name=TEAM_NAME,
             slug=TEAM_SLUG
         )
@@ -61,6 +66,7 @@ class ModelsTests(TestCase):
     def load_test_project(self):
         team = self.load_test_team()
         project = Project.objects.create(
+            id=1,
             name=PROJECT_NAME,
             slug=PROJECT_SLUG,
             working_team=team
@@ -69,12 +75,18 @@ class ModelsTests(TestCase):
 
     @staticmethod
     def load_test_tag():
-        tag = Tag.objects.create(name=TAG_NAME)
+        tag = Tag.objects.create(
+            id=1,
+            name=TAG_NAME
+        )
         return tag
 
     @staticmethod
     def load_test_task_type():
-        task_type = TaskType.objects.create(name=TASK_TYPE_NAME)
+        task_type = TaskType.objects.create(
+            id=1,
+            name=TASK_TYPE_NAME
+        )
         return task_type
 
     def load_test_task(self):
@@ -96,6 +108,7 @@ class ModelsTests(TestCase):
     @staticmethod
     def load_test_notification_type():
         notification_type = NotificationType.objects.create(
+            id=1,
             name=NOTIFICATION_TYPE_NAME,
             message_template=NOTIFICATION_TYPE_MESSAGE_TEMPLATE
         )
@@ -106,6 +119,7 @@ class ModelsTests(TestCase):
         notification_type = self.load_test_notification_type()
         task = self.load_test_task()
         notification = Notification.objects.create(
+            id=1,
             user=user,
             notification_type=notification_type,
             task=task,
@@ -120,7 +134,6 @@ class ModelsTests(TestCase):
     def test_create_worker_with_position(self):
         position = self.load_test_position()
         worker = self.load_test_worker()
-        worker.position = position
         self.assertEquals(worker.position, position)
         self.assertEquals(worker.username, WORKER_USERNAME)
         self.assertTrue(worker.check_password(WORKER_PASSWORD))
@@ -199,6 +212,5 @@ class ModelsTests(TestCase):
     def test_notification_get_message_text(self):
         task = self.load_test_task()
         notification = self.load_test_notification()
-        notification.task = task
         message_text = NOTIFICATION_TYPE_MESSAGE_TEMPLATE.format(task=task)
         self.assertEquals(notification.message_text, message_text)
