@@ -37,10 +37,10 @@ NOTIFICATION_SENT_AT = datetime(2020, 2, 2, 22, 22, 22)
 class ModelsTests(TestCase):
     @staticmethod
     def load_test_position():
-        position = Position.objects.create(
+        position = Position.objects.get_or_create(
             id=1,
             name=POSITION_NAME
-        )
+        )[0]
         return position
 
     def load_test_worker(self):
@@ -55,38 +55,38 @@ class ModelsTests(TestCase):
 
     def load_test_team(self):
         worker = self.load_test_worker()
-        team = Team.objects.create(
+        team = Team.objects.get_or_create(
             id=1,
             name=TEAM_NAME,
             slug=TEAM_SLUG
-        )
+        )[0]
         team.members.add(worker)
         return team
 
     def load_test_project(self):
         team = self.load_test_team()
-        project = Project.objects.create(
+        project = Project.objects.get_or_create(
             id=1,
             name=PROJECT_NAME,
             slug=PROJECT_SLUG,
             working_team=team
-        )
+        )[0]
         return project
 
     @staticmethod
     def load_test_tag():
-        tag = Tag.objects.create(
+        tag = Tag.objects.get_or_create(
             id=1,
             name=TAG_NAME
-        )
+        )[0]
         return tag
 
     @staticmethod
     def load_test_task_type():
-        task_type = TaskType.objects.create(
+        task_type = TaskType.objects.get_or_create(
             id=1,
             name=TASK_TYPE_NAME
-        )
+        )[0]
         return task_type
 
     def load_test_task(self):
@@ -94,37 +94,37 @@ class ModelsTests(TestCase):
         worker = self.load_test_worker()
         tag = self.load_test_tag()
         task_type = self.load_test_task_type()
-        task = Task.objects.create(
+        task = Task.objects.get_or_create(
             id=TASK_ID,
             name=TASK_NAME,
             task_type=task_type,
             project=project,
             requester=worker
-        )
+        )[0]
         task.tags.add(tag)
         task.assignees.add(worker)
         return task
 
     @staticmethod
     def load_test_notification_type():
-        notification_type = NotificationType.objects.create(
+        notification_type = NotificationType.objects.get_or_create(
             id=1,
             name=NOTIFICATION_TYPE_NAME,
             message_template=NOTIFICATION_TYPE_MESSAGE_TEMPLATE
-        )
+        )[0]
         return notification_type
 
     def load_test_notification(self):
         user = self.load_test_worker()
         notification_type = self.load_test_notification_type()
         task = self.load_test_task()
-        notification = Notification.objects.create(
+        notification = Notification.objects.get_or_create(
             id=1,
             user=user,
             notification_type=notification_type,
             task=task,
             sent_at=NOTIFICATION_SENT_AT,
-        )
+        )[0]
         return notification
 
     def test_position_str(self):
