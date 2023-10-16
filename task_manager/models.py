@@ -16,7 +16,11 @@ class Position(models.Model):
 
 
 class Worker(AbstractUser):
-    position = models.ForeignKey(Position, on_delete=models.CASCADE)
+    position = models.ForeignKey(
+        Position,
+        on_delete=models.CASCADE,
+        related_name="workers"
+    )
 
     class Meta:
         ordering = ["position", "first_name", "last_name"]
@@ -28,7 +32,7 @@ class Worker(AbstractUser):
 class Team(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=255, unique=True)
-    members = models.ManyToManyField(get_user_model())
+    members = models.ManyToManyField(get_user_model(), related_name="teams")
 
     class Meta:
         ordering = ["name"]
@@ -57,7 +61,11 @@ class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
-    working_team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    working_team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="projects"
+    )
 
     class Meta:
         ordering = ["name"]
@@ -121,7 +129,7 @@ class Task(models.Model):
         OPTIONAL = "1", "Optional"
         UNKNOWN = "0", "Unknown"
     name = models.CharField(max_length=255, unique=True)
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(Tag, related_name="tasks")
     description = models.TextField()
     deadline = models.DateField()
     is_completed = models.BooleanField()
@@ -129,10 +137,14 @@ class Task(models.Model):
         choices=Priority.choices,
         default=Priority.UNKNOWN
     )
-    task_type = models.ForeignKey(TaskType, on_delete=models.CASCADE)
-    assignees = models.ManyToManyField(get_user_model())
+    task_type = models.ForeignKey(TaskType, on_delete=models.CASCADE,)
+    assignees = models.ManyToManyField(get_user_model(), related_name="tasks")
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    requester = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    requester = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name="requested_tasks"
+    )
 
     class Meta:
         ordering = ["name"]
@@ -166,7 +178,11 @@ class NotificationType(models.Model):
 
 
 class Notification(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
     notification_type = models.ForeignKey(
         NotificationType,
         on_delete=models.CASCADE
