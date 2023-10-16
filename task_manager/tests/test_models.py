@@ -21,13 +21,14 @@ WORKER_FIRST_NAME = "test_first"
 WORKER_LAST_NAME = "test_last"
 WORKER_PASSWORD = "test_password"
 TEAM_NAME = "Flaming Testers"
-TEAM_SLUG = "flaming_testers"
+TEAM_SLUG = "flaming-testers"
 PROJECT_NAME = "Test project"
-PROJECT_SLUG = "test_project"
+PROJECT_SLUG = "test-project"
 TAG_NAME = "test_tag"
 TASK_TYPE_NAME = "test_task"
 TASK_ID = 1
 TASK_NAME = "Test task"
+TASK_DEADLINE = datetime(2020, 2, 4)
 NOTIFICATION_TYPE_NAME = "test_message"
 NOTIFICATION_TYPE_MESSAGE_TEMPLATE = ("Message about task \"{task.name}\" "
                                       "from {task.requester}")
@@ -49,6 +50,8 @@ class ModelsTests(TestCase):
             id=1,
             position=position,
             username=WORKER_USERNAME,
+            first_name=WORKER_FIRST_NAME,
+            last_name=WORKER_LAST_NAME,
             password=WORKER_PASSWORD,
         )
         return worker
@@ -97,6 +100,7 @@ class ModelsTests(TestCase):
         task = Task.objects.get_or_create(
             id=TASK_ID,
             name=TASK_NAME,
+            deadline=TASK_DEADLINE,
             task_type=task_type,
             project=project,
             requester=worker
@@ -123,8 +127,9 @@ class ModelsTests(TestCase):
             user=user,
             notification_type=notification_type,
             task=task,
-            sent_at=NOTIFICATION_SENT_AT,
         )[0]
+        notification.sent_at = NOTIFICATION_SENT_AT
+        notification.save()
         return notification
 
     def test_position_str(self):
@@ -156,7 +161,7 @@ class ModelsTests(TestCase):
 
     def test_create_project_without_slug(self):
         team = self.load_test_team()
-        project = Project(
+        project = Project.objects.create(
             name=PROJECT_NAME,
             working_team=team,
         )
