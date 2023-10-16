@@ -130,9 +130,9 @@ class Task(models.Model):
         UNKNOWN = "0", "Unknown"
     name = models.CharField(max_length=255, unique=True)
     tags = models.ManyToManyField(Tag, related_name="tasks")
-    description = models.TextField()
+    description = models.TextField(blank=True)
     deadline = models.DateField()
-    is_completed = models.BooleanField()
+    is_completed = models.BooleanField(default=False)
     priority = models.PositiveSmallIntegerField(
         choices=Priority.choices,
         default=Priority.UNKNOWN
