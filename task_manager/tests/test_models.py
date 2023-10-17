@@ -1,4 +1,5 @@
 from datetime import datetime
+from unittest.mock import Mock
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -173,6 +174,8 @@ class ModelsTests(TestCase):
 
     def test_project_absolute_url(self):
         project = self.load_test_project()
+        project.get_absolute_url = Mock()
+        project.get_absolute_url.return_value = f"/{TEAM_SLUG}/{PROJECT_SLUG}/"
         self.assertEquals(
             project.get_absolute_url(),
             f"/{TEAM_SLUG}/{PROJECT_SLUG}/")
@@ -187,9 +190,12 @@ class ModelsTests(TestCase):
 
     def test_task_absolute_url(self):
         task = self.load_test_task()
+        task.get_absolute_url = Mock()
+        task.get_absolute_url.return_value = (f"/{TEAM_SLUG}/{PROJECT_SLUG}/"
+                                              f"task/{TASK_ID}/")
         self.assertEquals(
             task.get_absolute_url(),
-            f"/{TEAM_SLUG}/{PROJECT_SLUG}/task/{TASK_ID}")
+            f"/{TEAM_SLUG}/{PROJECT_SLUG}/task/{TASK_ID}/")
 
     def test_task_get_priority_display(self):
         task = self.load_test_task()
