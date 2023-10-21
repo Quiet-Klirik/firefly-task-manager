@@ -40,7 +40,6 @@ class ModelsTests(TestCase):
     @staticmethod
     def load_test_position():
         position = Position.objects.get_or_create(
-            id=1,
             name=POSITION_NAME
         )[0]
         return position
@@ -60,7 +59,6 @@ class ModelsTests(TestCase):
     def load_test_team(self):
         worker = self.load_test_worker()
         team = Team.objects.get_or_create(
-            id=1,
             name=TEAM_NAME,
             slug=TEAM_SLUG
         )[0]
@@ -70,7 +68,6 @@ class ModelsTests(TestCase):
     def load_test_project(self):
         team = self.load_test_team()
         project = Project.objects.get_or_create(
-            id=1,
             name=PROJECT_NAME,
             slug=PROJECT_SLUG,
             working_team=team
@@ -80,7 +77,6 @@ class ModelsTests(TestCase):
     @staticmethod
     def load_test_tag():
         tag = Tag.objects.get_or_create(
-            id=1,
             name=TAG_NAME
         )[0]
         return tag
@@ -88,7 +84,6 @@ class ModelsTests(TestCase):
     @staticmethod
     def load_test_task_type():
         task_type = TaskType.objects.get_or_create(
-            id=1,
             name=TASK_TYPE_NAME
         )[0]
         return task_type
@@ -98,22 +93,22 @@ class ModelsTests(TestCase):
         worker = self.load_test_worker()
         tag = self.load_test_tag()
         task_type = self.load_test_task_type()
-        task = Task.objects.get_or_create(
+        task = Task(
             id=TASK_ID,
             name=TASK_NAME,
             deadline=TASK_DEADLINE,
             task_type=task_type,
             project=project,
-            requester=worker
-        )[0]
+            requester=worker,
+        )
         task.tags.add(tag)
         task.assignees.add(worker)
+        task.save()
         return task
 
     @staticmethod
     def load_test_notification_type():
         notification_type = NotificationType.objects.get_or_create(
-            id=1,
             name=NOTIFICATION_TYPE_NAME,
             message_template=NOTIFICATION_TYPE_MESSAGE_TEMPLATE
         )[0]
@@ -124,7 +119,6 @@ class ModelsTests(TestCase):
         notification_type = self.load_test_notification_type()
         task = self.load_test_task()
         notification = Notification.objects.get_or_create(
-            id=1,
             user=user,
             notification_type=notification_type,
             task=task,
@@ -225,3 +219,37 @@ class ModelsTests(TestCase):
         notification = self.load_test_notification()
         message_text = NOTIFICATION_TYPE_MESSAGE_TEMPLATE.format(task=task)
         self.assertEquals(notification.message_text, message_text)
+
+    def test_task_created_notification_is_creating(self):
+        user = self.load_test_worker()
+        task = self.load_test_task()
+        notification = Notification.objects.filter(
+            user=user,
+            notification_type__name="task_created",
+            task=task,
+        )
+        self.assertTrue(notification)
+
+    def test_task_updated_notification_is_creating(self):
+        user = self.load_test_worker()
+        task = self.load_test_task()
+        task.description = "Some lorem ipsum text"
+        task.save()
+        notification = Notification.objects.filter(
+            user=user,
+            notification_type__name="task_updated",
+            task=task,
+        )
+        self.assertTrue(notification)
+
+    def test_task_completed_notification_is_creating(self):
+        user = self.load_test_worker()
+        task = self.load_test_task()
+        task.is_completed = True
+        task.save()
+        notification = Notification.objects.filter(
+            user=user,
+            notification_type__name="task_completed",
+            task=task,
+        )
+        self.assertTrue(notification)
