@@ -1,5 +1,5 @@
 from django.db.models.signals import post_save
-from django.dispatch import receiver, Signal
+from django.dispatch import receiver
 
 from task_manager.models import Task, NotificationType, Notification
 
