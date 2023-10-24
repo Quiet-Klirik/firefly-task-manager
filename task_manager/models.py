@@ -11,6 +11,11 @@ class Position(models.Model):
     class Meta:
         ordering = ["name"]
 
+    @staticmethod
+    def get_default_position():
+        default_position, created = Position.objects.get_or_create(name="User")
+        return default_position
+
     def __str__(self):
         return self.name
 
@@ -18,7 +23,8 @@ class Position(models.Model):
 class Worker(AbstractUser):
     position = models.ForeignKey(
         Position,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_DEFAULT,
+        default=Position.get_default_position().id,
         related_name="workers"
     )
 
@@ -120,16 +126,16 @@ class TaskType(models.Model):
 
 
 class Task(models.Model):
-    class Priority(models.TextChoices):
-        CRITICAL = "6", "Critical"
-        URGENT = "5", "Urgent"
-        HIGH = "4", "High"
-        MIDDLE = "3", "Middle"
-        LOW = "2", "Low"
-        OPTIONAL = "1", "Optional"
-        UNKNOWN = "0", "Unknown"
+    class Priority(models.IntegerChoices):
+        CRITICAL = 6, "Critical"
+        URGENT = 5, "Urgent"
+        HIGH = 4, "High"
+        MIDDLE = 3, "Middle"
+        LOW = 2, "Low"
+        OPTIONAL = 1, "Optional"
+        UNKNOWN = 0, "Unknown"
     name = models.CharField(max_length=255, unique=True)
-    tags = models.ManyToManyField(Tag, related_name="tasks")
+    tags = models.ManyToManyField(Tag, related_name="tasks", blank=True)
     description = models.TextField(blank=True)
     deadline = models.DateField()
     is_completed = models.BooleanField(default=False)
