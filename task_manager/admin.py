@@ -1,8 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from task_manager.models import Position, Worker, Team, Project, Tag, TaskType, \
-    Task, NotificationType, Notification
+from task_manager.models import (
+    Position,
+    Worker,
+    Team,
+    Project,
+    Tag,
+    TaskType,
+    Task,
+    NotificationType,
+    Notification
+)
 
 admin.site.register(Position)
 
