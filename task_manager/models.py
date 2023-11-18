@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+from taggit.managers import TaggableManager
 
 
 class Position(models.Model):
@@ -11,9 +12,9 @@ class Position(models.Model):
     class Meta:
         ordering = ["name"]
 
-    @staticmethod
-    def get_default_position():
-        default_position, created = Position.objects.get_or_create(name="User")
+    @classmethod
+    def get_default_position(cls):
+        default_position, created = cls.objects.get_or_create(name="User")
         return default_position
 
     def __str__(self):
@@ -23,13 +24,26 @@ class Position(models.Model):
 class Worker(AbstractUser):
     position = models.ForeignKey(
         Position,
-        on_delete=models.SET_DEFAULT,
-        default=Position.get_default_position().id,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="workers"
     )
 
     class Meta:
         ordering = ["position", "first_name", "last_name"]
+
+    @classmethod
+    def get_deleted_user(cls):
+        try:
+            deleted_user = cls.objects.get(username="deleted.user")
+        except cls.DoesNotExist:
+            deleted_user = cls.objects.create_user(
+                username="deleted.user",
+                first_name="deleted",
+                last_name="user",
+                password="admin_deleted_user_password"
+            )
+        return deleted_user
 
     def __str__(self):
         return f"{self.position}: {self.first_name} {self.last_name}"
@@ -38,6 +52,12 @@ class Worker(AbstractUser):
 class Team(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=255, unique=True)
+    founder = models.ForeignKey(
+        Worker,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="founded_teams"
+    )
     members = models.ManyToManyField(get_user_model(), related_name="teams")
 
     class Meta:
@@ -105,16 +125,6 @@ class Project(models.Model):
         return self.name
 
 
-class Tag(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    class Meta:
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
-
-
 class TaskType(models.Model):
     name = models.CharField(max_length=255, unique=True)
 
@@ -135,7 +145,7 @@ class Task(models.Model):
         OPTIONAL = 1, "Optional"
         UNKNOWN = 0, "Unknown"
     name = models.CharField(max_length=255, unique=True)
-    tags = models.ManyToManyField(Tag, related_name="tasks", blank=True)
+    tags = TaggableManager(related_name="tasks", blank=True)
     description = models.TextField(blank=True)
     deadline = models.DateField()
     is_completed = models.BooleanField(default=False)
@@ -144,11 +154,15 @@ class Task(models.Model):
         default=Priority.UNKNOWN
     )
     task_type = models.ForeignKey(TaskType, on_delete=models.CASCADE,)
-    assignees = models.ManyToManyField(get_user_model(), related_name="tasks")
+    assignees = models.ManyToManyField(
+        get_user_model(),
+        related_name="assigned_tasks"
+    )
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     requester = models.ForeignKey(
         get_user_model(),
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="requested_tasks"
     )
 

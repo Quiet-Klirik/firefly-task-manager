@@ -6,7 +6,6 @@ from task_manager.models import (
     Worker,
     Team,
     Project,
-    Tag,
     TaskType,
     Task,
     NotificationType,
@@ -50,11 +49,6 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ("working_team",)
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
-
-
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    search_fields = ("name",)
 
 
 admin.site.register(TaskType)
