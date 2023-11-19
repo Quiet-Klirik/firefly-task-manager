@@ -6,6 +6,7 @@ from django.urls import reverse
 from task_manager.models import Team, Project, Worker
 
 HOME_PAGE_URL = reverse("task_manager:index")
+USER_REGISTER_URL = reverse("register")
 
 
 class PublicHomePageTests(TestCase):
@@ -29,3 +30,13 @@ class PublicHomePageTests(TestCase):
         self.assertEquals(context_data["teams_count"], teams_count)
         self.assertEquals(context_data["projects_count"], projects_count)
         self.assertEquals(context_data["workers_count"], worker_count)
+
+
+class UserRegisterViewTests(TestCase):
+    def test_homepage_using_template(self):
+        self.assertTemplateUsed = Mock()
+        self.assertTemplateUsed.return_value = True
+
+        response = self.client.get(USER_REGISTER_URL)
+        self.assertEqual(response.status_code, 200)
+        assert self.assertTemplateUsed(response, "registration/register.html")
