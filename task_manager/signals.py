@@ -35,7 +35,7 @@ def user_pre_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=get_user_model())
 def user_post_save(sender, instance, **kwargs):
     if instance.position is None:
-        get_user_model().filter(pk=instance.pk).update(
+        get_user_model().objects.filter(pk=instance.pk).update(
             position_id=Position.get_default_position().id
         )
 
