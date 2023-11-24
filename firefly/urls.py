@@ -19,7 +19,7 @@ from django.urls import path, include
 
 from task_manager.views import (
     UserRegisterView,
-    UserProfileDetailView
+    UserProfileDetailView, UserProfileEditView
 )
 
 urlpatterns = [
@@ -31,5 +31,10 @@ urlpatterns = [
         "accounts/<str:slug>/profile/",
         UserProfileDetailView.as_view(),
         name="profile"
+    ),
+    path(
+        "accounts/profile/edit/",
+        UserProfileEditView.as_view(),
+        name="profile-edit"
     )
 ]

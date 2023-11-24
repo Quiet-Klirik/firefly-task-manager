@@ -8,6 +8,7 @@ from task_manager.models import Team, Project, Worker
 
 HOME_PAGE_URL = reverse("task_manager:index")
 USER_REGISTER_URL = reverse("register")
+USER_PROFILE_EDIT_URL = reverse("profile-edit")
 
 
 def assert_login_required(test_case_obj: TestCase, url: str) -> None:
@@ -55,6 +56,9 @@ class PublicUserTests(TestCase):
     def test_user_profile_login_required(self):
         self.assert_user_related_view_login_required("profile")
 
+    def test_user_profile_edit_login_required(self):
+        assert_login_required(self, USER_PROFILE_EDIT_URL)
+
 
 class PrivateUserTests(TestCase):
     def setUp(self) -> None:
@@ -72,3 +76,13 @@ class PrivateUserTests(TestCase):
 
     def test_retrieve_user_profile_page(self):
         self.assert_retrieve_user_related_view("profile")
+
+    def test_retrieve_user_profile_edit_page(self):
+        response = self.client.get(USER_PROFILE_EDIT_URL)
+        self.assertEquals(response.status_code, 200)
+
+    def test_user_profile_edit_object_is_current_user(self):
+        response = self.client.get(USER_PROFILE_EDIT_URL)
+        context = response.context
+        self.assertIn("object", context)
+        self.assertEquals(context["object"], self.user)

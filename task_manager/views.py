@@ -29,3 +29,23 @@ class UserProfileDetailView(LoginRequiredMixin, generic.DetailView):
     model = get_user_model()
     queryset = get_user_model().objects.select_related("position")
     slug_field = "username"
+
+
+class UserProfileEditView(LoginRequiredMixin, generic.UpdateView):
+    model = get_user_model()
+    fields = (
+        "username",
+        "first_name",
+        "last_name",
+        "position",
+    )
+    slug_field = "username"
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "profile",
+            kwargs={"slug": self.get_object().username}
+        )
