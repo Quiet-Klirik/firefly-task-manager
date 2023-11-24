@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views import generic
 
@@ -22,3 +23,9 @@ class UserRegisterView(generic.CreateView):
     form_class = UserRegistrationForm
     template_name = "registration/register.html"
     success_url = reverse_lazy("task_manager:index")
+
+
+class UserProfileDetailView(LoginRequiredMixin, generic.DetailView):
+    model = get_user_model()
+    queryset = get_user_model().objects.select_related("position")
+    slug_field = "username"
