@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import generic
 
@@ -30,6 +31,12 @@ class UserProfileDetailView(LoginRequiredMixin, generic.DetailView):
     queryset = get_user_model().objects.select_related("position")
     slug_field = "username"
 
+    def get(self, request, *args, **kwargs):
+        if "slug" not in kwargs:
+            url = reverse_lazy("profile", kwargs={"slug": request.user.username})
+            return redirect(url)
+        return super().get(self, request, *args, **kwargs)
+
 
 class UserProfileEditView(LoginRequiredMixin, generic.UpdateView):
     model = get_user_model()
@@ -49,3 +56,12 @@ class UserProfileEditView(LoginRequiredMixin, generic.UpdateView):
             "profile",
             kwargs={"slug": self.get_object().username}
         )
+
+
+class UserDeleteView(LoginRequiredMixin, generic.DeleteView):
+    model = get_user_model()
+    slug_field = "username"
+    success_url = reverse_lazy("task_manager:index")
+
+    def get_object(self, queryset=None):
+        return self.request.user

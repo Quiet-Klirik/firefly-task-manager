@@ -19,7 +19,7 @@ from django.urls import path, include
 
 from task_manager.views import (
     UserRegisterView,
-    UserProfileDetailView, UserProfileEditView
+    UserProfileDetailView, UserProfileEditView, UserDeleteView
 )
 
 urlpatterns = [
@@ -27,6 +27,11 @@ urlpatterns = [
     path("", include("task_manager.urls", namespace="task_manager")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/register/", UserRegisterView.as_view(), name="register"),
+    path(
+        "accounts/profile/",
+        UserProfileDetailView.as_view(),
+        name="profile-redirect"
+    ),
     path(
         "accounts/<str:slug>/profile/",
         UserProfileDetailView.as_view(),
@@ -36,5 +41,10 @@ urlpatterns = [
         "accounts/profile/edit/",
         UserProfileEditView.as_view(),
         name="profile-edit"
+    ),
+    path(
+        "accounts/profile/delete/",
+        UserDeleteView.as_view(),
+        name="profile-delete"
     )
 ]

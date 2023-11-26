@@ -8,7 +8,9 @@ from task_manager.models import Team, Project, Worker
 
 HOME_PAGE_URL = reverse("task_manager:index")
 USER_REGISTER_URL = reverse("register")
+USER_PROFILE_REDIRECT_URL = reverse("profile-redirect")
 USER_PROFILE_EDIT_URL = reverse("profile-edit")
+USER_PROFILE_DELETE_URL = reverse("profile-delete")
 
 
 def assert_login_required(test_case_obj: TestCase, url: str) -> None:
@@ -56,8 +58,14 @@ class PublicUserTests(TestCase):
     def test_user_profile_login_required(self):
         self.assert_user_related_view_login_required("profile")
 
+    def test_user_profile_redirect_login_required(self):
+        assert_login_required(self, USER_PROFILE_REDIRECT_URL)
+
     def test_user_profile_edit_login_required(self):
         assert_login_required(self, USER_PROFILE_EDIT_URL)
+
+    def test_user_profile_delete_login_required(self):
+        assert_login_required(self, USER_PROFILE_DELETE_URL)
 
 
 class PrivateUserTests(TestCase):
@@ -77,6 +85,11 @@ class PrivateUserTests(TestCase):
     def test_retrieve_user_profile_page(self):
         self.assert_retrieve_user_related_view("profile")
 
+    def test_redirect_user_profile_redirect_url(self):
+        response = self.client.get(USER_PROFILE_REDIRECT_URL)
+        expected_url = reverse("profile", kwargs={"slug": self.user.username})
+        self.assertRedirects(response, expected_url)
+
     def test_retrieve_user_profile_edit_page(self):
         response = self.client.get(USER_PROFILE_EDIT_URL)
         self.assertEquals(response.status_code, 200)
@@ -86,3 +99,10 @@ class PrivateUserTests(TestCase):
         context = response.context
         self.assertIn("object", context)
         self.assertEquals(context["object"], self.user)
+
+    def test_retrieve_user_profile_delete(self):
+        response = self.client.get(USER_PROFILE_DELETE_URL)
+        self.assertEquals(response.status_code, 200)
+        context_data = response.context
+        self.assertIn("object", context_data)
+        self.assertEquals(context_data["object"], self.user)
