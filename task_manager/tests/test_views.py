@@ -11,6 +11,7 @@ USER_REGISTER_URL = reverse("register")
 USER_PROFILE_REDIRECT_URL = reverse("profile-redirect")
 USER_PROFILE_EDIT_URL = reverse("profile-edit")
 USER_PROFILE_DELETE_URL = reverse("profile-delete")
+TEAM_LIST_URL = reverse("task_manager:team-list")
 
 
 def assert_login_required(test_case_obj: TestCase, url: str) -> None:
@@ -106,3 +107,40 @@ class PrivateUserTests(TestCase):
         context_data = response.context
         self.assertIn("object", context_data)
         self.assertEquals(context_data["object"], self.user)
+
+
+class PublicTeamTests(TestCase):
+    def test_team_list_login_required(self):
+        assert_login_required(self, TEAM_LIST_URL)
+
+
+class PrivateTeamTest(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="test.user",
+            password="test_password"
+        )
+        Team.objects.create(name="Test founded team", founder=self.user)
+        involved_team = Team.objects.create(name="Test involved team")
+        involved_team.members.add(self.user)
+        involved_team.save()
+        self.client.force_login(self.user)
+
+    def test_retrieve_team_list_page(self):
+        response = self.client.get(TEAM_LIST_URL)
+        self.assertEquals(response.status_code, 200)
+
+    def test_team_list_correct_context_data(self):
+        response = self.client.get(TEAM_LIST_URL)
+        context_data = response.context
+        self.assertIn("involved_teams", context_data)
+        self.assertIn("founded_teams", context_data)
+        print(context_data["involved_teams"] == self.user.teams.all())
+        self.assertEquals(
+            list(context_data["involved_teams"]),
+            list(self.user.teams.all())
+        )
+        self.assertEquals(
+            list(context_data["founded_teams"]),
+            list(self.user.founded_teams.all())
+        )

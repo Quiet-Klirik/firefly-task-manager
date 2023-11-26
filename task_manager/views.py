@@ -33,7 +33,10 @@ class UserProfileDetailView(LoginRequiredMixin, generic.DetailView):
 
     def get(self, request, *args, **kwargs):
         if "slug" not in kwargs:
-            url = reverse_lazy("profile", kwargs={"slug": request.user.username})
+            url = reverse_lazy(
+                "profile",
+                kwargs={"slug": request.user.username}
+            )
             return redirect(url)
         return super().get(self, request, *args, **kwargs)
 
@@ -65,3 +68,15 @@ class UserDeleteView(LoginRequiredMixin, generic.DeleteView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+
+class TeamListView(LoginRequiredMixin, generic.TemplateView):
+    model = Team
+    template_name = "task_manager/team_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context["involved_teams"] = user.teams.all()
+        context["founded_teams"] = user.founded_teams.all()
+        return context

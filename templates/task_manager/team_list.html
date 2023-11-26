@@ -1,0 +1,24 @@
+<h2>
+  Involved teams
+</h2>
+<ul>
+  {% for team in involved_teams %}
+  <li>
+    {{ team.name }}
+  </li>
+  {% empty %}
+    <h3>There are no involved teams</h3>
+  {% endfor %}
+</ul>
+<h2>
+  Founded teams
+</h2>
+<ul>
+  {% for team in founded_teams %}
+  <li>
+    {{ team.name }}
+  </li>
+  {% empty %}
+    <h3>There are no founded teams</h3>
+  {% endfor %}
+</ul>
