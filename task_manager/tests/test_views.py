@@ -21,12 +21,9 @@ def assert_login_required(test_case_obj: TestCase, url: str) -> None:
 
 class PublicHomePageTests(TestCase):
     def test_homepage_using_template(self):
-        self.assertTemplateUsed = Mock()
-        self.assertTemplateUsed.return_value = True
-
         response = self.client.get(HOME_PAGE_URL)
         self.assertEqual(response.status_code, 200)
-        assert self.assertTemplateUsed(response, "task_manager/index.html")
+        self.assertTemplateUsed(response, "task_manager/index.html")
 
     def test_homepage_context_data_consists_stats(self):
         response = self.client.get(HOME_PAGE_URL)
@@ -44,12 +41,9 @@ class PublicHomePageTests(TestCase):
 
 class PublicUserTests(TestCase):
     def test_user_register_using_template(self):
-        self.assertTemplateUsed = Mock()
-        self.assertTemplateUsed.return_value = True
-
         response = self.client.get(USER_REGISTER_URL)
         self.assertEqual(response.status_code, 200)
-        assert self.assertTemplateUsed(response, "registration/register.html")
+        self.assertTemplateUsed(response, "registration/register.html")
 
     def assert_user_related_view_login_required(self, url_name: str) -> None:
         user = get_user_model().objects.create(username="test.user")
@@ -135,7 +129,6 @@ class PrivateTeamTest(TestCase):
         context_data = response.context
         self.assertIn("involved_teams", context_data)
         self.assertIn("founded_teams", context_data)
-        print(context_data["involved_teams"] == self.user.teams.all())
         self.assertEquals(
             list(context_data["involved_teams"]),
             list(self.user.teams.all())
@@ -144,3 +137,8 @@ class PrivateTeamTest(TestCase):
             list(context_data["founded_teams"]),
             list(self.user.founded_teams.all())
         )
+
+    def test_team_list_using_template(self):
+        response = self.client.get(TEAM_LIST_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "task_manager/team_list.html")
