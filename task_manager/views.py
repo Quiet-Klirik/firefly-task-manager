@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import generic
 
-from task_manager.forms import UserRegistrationForm
+from task_manager.forms import UserRegistrationForm, TeamForm
 from task_manager.models import Team, Project, Worker
 
 
@@ -80,3 +80,13 @@ class TeamListView(LoginRequiredMixin, generic.TemplateView):
         context["involved_teams"] = user.teams.all()
         context["founded_teams"] = user.founded_teams.all()
         return context
+
+
+class TeamCreateView(LoginRequiredMixin, generic.CreateView):
+    model = Team
+    form_class = TeamForm
+    success_url = reverse_lazy("task_manager:team-list")
+
+    def form_valid(self, form):
+        form.instance.founder = self.request.user
+        return super().form_valid(form)

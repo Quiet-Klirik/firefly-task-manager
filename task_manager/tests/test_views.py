@@ -12,6 +12,7 @@ USER_PROFILE_REDIRECT_URL = reverse("profile-redirect")
 USER_PROFILE_EDIT_URL = reverse("profile-edit")
 USER_PROFILE_DELETE_URL = reverse("profile-delete")
 TEAM_LIST_URL = reverse("task_manager:team-list")
+TEAM_CREATE_URL = reverse("task_manager:team-create")
 
 
 def assert_login_required(test_case_obj: TestCase, url: str) -> None:
@@ -107,6 +108,9 @@ class PublicTeamTests(TestCase):
     def test_team_list_login_required(self):
         assert_login_required(self, TEAM_LIST_URL)
 
+    def test_team_create_login_required(self):
+        assert_login_required(self, TEAM_CREATE_URL)
+
 
 class PrivateTeamTest(TestCase):
     def setUp(self) -> None:
@@ -142,3 +146,7 @@ class PrivateTeamTest(TestCase):
         response = self.client.get(TEAM_LIST_URL)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "task_manager/team_list.html")
+
+    def test_retrieve_team_create_page(self):
+        response = self.client.get(TEAM_CREATE_URL)
+        self.assertEquals(response.status_code, 200)
