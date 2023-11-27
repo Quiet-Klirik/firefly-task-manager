@@ -54,12 +54,6 @@ class UserProfileEditView(LoginRequiredMixin, generic.UpdateView):
     def get_object(self, queryset=None):
         return self.request.user
 
-    def get_success_url(self):
-        return reverse_lazy(
-            "profile",
-            kwargs={"slug": self.get_object().username}
-        )
-
 
 class UserDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = get_user_model()
@@ -90,12 +84,6 @@ class TeamCreateView(LoginRequiredMixin, generic.CreateView):
         form.instance.founder = self.request.user
         return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse_lazy(
-            "task_manager:team-detail",
-            kwargs={"slug": self.object.slug}
-        )
-
 
 class TeamDetailView(LoginRequiredMixin, generic.DetailView):
     model = Team
@@ -106,3 +94,8 @@ class TeamDetailView(LoginRequiredMixin, generic.DetailView):
         ).prefetch_related(
             "members", "projects"
         ).get(slug=self.kwargs.get("slug"))
+
+
+class TeamUpdateView(LoginRequiredMixin, generic.UpdateView):
+    model = Team
+    form_class = TeamForm

@@ -122,6 +122,11 @@ class PublicTeamTests(TestCase):
             "task_manager:team-detail"
         )
 
+    def test_team_update_login_required(self):
+        self.assert_team_related_view_login_required(
+            "task_manager:team-update"
+        )
+
 
 class PrivateTeamTest(TestCase):
     def setUp(self) -> None:
@@ -173,4 +178,5 @@ class PrivateTeamTest(TestCase):
     def test_retrieve_team_detail_page(self):
         self.assert_retrieve_team_related_view("task_manager:team-detail")
 
-
+    def test_retrieve_team_update_page(self):
+        self.assert_retrieve_team_related_view("task_manager:team-update")
