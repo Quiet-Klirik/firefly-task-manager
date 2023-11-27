@@ -33,6 +33,9 @@ class Worker(AbstractUser):
     class Meta:
         ordering = ["position", "first_name", "last_name"]
 
+    def get_absolute_url(self):
+        return reverse("profile", kwargs={"slug": self.username})
+
     @classmethod
     def get_deleted_user(cls):
         try:
@@ -63,6 +66,9 @@ class Team(models.Model):
 
     class Meta:
         ordering = ["name"]
+
+    def get_absolute_url(self):
+        return reverse("task_manager:team-detail", kwargs={"slug": self.slug})
 
     def save(
             self,
