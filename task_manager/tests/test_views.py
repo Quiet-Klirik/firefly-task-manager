@@ -111,6 +111,17 @@ class PublicTeamTests(TestCase):
     def test_team_create_login_required(self):
         assert_login_required(self, TEAM_CREATE_URL)
 
+    def assert_team_related_view_login_required(self, url_name: str) -> None:
+        user = get_user_model().objects.create(username="test.user")
+        team = Team.objects.create(name="Test team", founder=user)
+        url = reverse(url_name, kwargs={"slug": team.slug})
+        assert_login_required(self, url)
+
+    def test_team_detail_login_required(self):
+        self.assert_team_related_view_login_required(
+            "task_manager:team-detail"
+        )
+
 
 class PrivateTeamTest(TestCase):
     def setUp(self) -> None:
@@ -118,7 +129,10 @@ class PrivateTeamTest(TestCase):
             username="test.user",
             password="test_password"
         )
-        Team.objects.create(name="Test founded team", founder=self.user)
+        self.team = Team.objects.create(
+            name="Test founded team",
+            founder=self.user
+        )
         involved_team = Team.objects.create(name="Test involved team")
         involved_team.members.add(self.user)
         involved_team.save()
@@ -150,3 +164,13 @@ class PrivateTeamTest(TestCase):
     def test_retrieve_team_create_page(self):
         response = self.client.get(TEAM_CREATE_URL)
         self.assertEquals(response.status_code, 200)
+
+    def assert_retrieve_team_related_view(self, url_name: str) -> None:
+        url = reverse(url_name, kwargs={"slug": self.team.slug})
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 200)
+
+    def test_retrieve_team_detail_page(self):
+        self.assert_retrieve_team_related_view("task_manager:team-detail")
+
+

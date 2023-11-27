@@ -1,0 +1,25 @@
+{{ object.slug }}
+<h1>{{ object.name }}</h1>
+<div>
+  Founder:
+  <a href="{% url 'profile' slug=object.founder.username %}">
+    {{ object.founder.first_name }} {{ object.founder.last_name }}
+  </a>
+</div>
+<div>
+  Members :
+  {% for member in object.members.all %}
+    <a href="{% url 'profile' slug=member.username %}">{{ member.first_name }} {{ member.last_name }}</a>,
+  {% empty %}
+    no members
+  {% endfor %}
+</div>
+<h2>Projects:</h2>
+<ul>
+  {% for project in object.projects.all %}
+    <li>{{ project.name }}</li>
+  {% endfor %}
+  {% if object.founder == user %}
+    <li><a href="#">+</a></li>
+  {% endif %}
+</ul>

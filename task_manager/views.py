@@ -85,8 +85,24 @@ class TeamListView(LoginRequiredMixin, generic.TemplateView):
 class TeamCreateView(LoginRequiredMixin, generic.CreateView):
     model = Team
     form_class = TeamForm
-    success_url = reverse_lazy("task_manager:team-list")
 
     def form_valid(self, form):
         form.instance.founder = self.request.user
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "task_manager:team-detail",
+            kwargs={"slug": self.object.slug}
+        )
+
+
+class TeamDetailView(LoginRequiredMixin, generic.DetailView):
+    model = Team
+
+    def get_object(self, queryset=None):
+        return self.model.objects.select_related(
+            "founder"
+        ).prefetch_related(
+            "members", "projects"
+        ).get(slug=self.kwargs.get("slug"))
