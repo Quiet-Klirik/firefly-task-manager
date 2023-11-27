@@ -8,11 +8,15 @@ from task_manager.models import Team, Project, Worker
 
 HOME_PAGE_URL = reverse("task_manager:index")
 USER_REGISTER_URL = reverse("register")
+USER_PROFILE_URL_NAME = "profile"
 USER_PROFILE_REDIRECT_URL = reverse("profile-redirect")
 USER_PROFILE_EDIT_URL = reverse("profile-edit")
 USER_PROFILE_DELETE_URL = reverse("profile-delete")
 TEAM_LIST_URL = reverse("task_manager:team-list")
 TEAM_CREATE_URL = reverse("task_manager:team-create")
+TEAM_DETAIL_URL_NAME = "task_manager:team-detail"
+TEAM_UPDATE_URL_NAME = "task_manager:team-update"
+TEAM_DELETE_URL_NAME = "task_manager:team-delete"
 
 
 def assert_login_required(test_case_obj: TestCase, url: str) -> None:
@@ -52,7 +56,7 @@ class PublicUserTests(TestCase):
         assert_login_required(self, url)
 
     def test_user_profile_login_required(self):
-        self.assert_user_related_view_login_required("profile")
+        self.assert_user_related_view_login_required(USER_PROFILE_URL_NAME)
 
     def test_user_profile_redirect_login_required(self):
         assert_login_required(self, USER_PROFILE_REDIRECT_URL)
@@ -79,11 +83,11 @@ class PrivateUserTests(TestCase):
         self.assertEquals(response.status_code, 200)
 
     def test_retrieve_user_profile_page(self):
-        self.assert_retrieve_user_related_view("profile")
+        self.assert_retrieve_user_related_view(USER_PROFILE_URL_NAME)
 
     def test_redirect_user_profile_redirect_url(self):
         response = self.client.get(USER_PROFILE_REDIRECT_URL)
-        expected_url = reverse("profile", kwargs={"slug": self.user.username})
+        expected_url = reverse(USER_PROFILE_URL_NAME, kwargs={"slug": self.user.username})
         self.assertRedirects(response, expected_url)
 
     def test_retrieve_user_profile_edit_page(self):
@@ -119,12 +123,17 @@ class PublicTeamTests(TestCase):
 
     def test_team_detail_login_required(self):
         self.assert_team_related_view_login_required(
-            "task_manager:team-detail"
+            TEAM_DETAIL_URL_NAME
         )
 
     def test_team_update_login_required(self):
         self.assert_team_related_view_login_required(
-            "task_manager:team-update"
+            TEAM_UPDATE_URL_NAME
+        )
+
+    def test_team_delete_login_required(self):
+        self.assert_team_related_view_login_required(
+            TEAM_DELETE_URL_NAME
         )
 
 
@@ -134,13 +143,16 @@ class PrivateTeamTest(TestCase):
             username="test.user",
             password="test_password"
         )
-        self.team = Team.objects.create(
+        self.founded_team = Team.objects.create(
             name="Test founded team",
             founder=self.user
         )
-        involved_team = Team.objects.create(name="Test involved team")
-        involved_team.members.add(self.user)
-        involved_team.save()
+        self.involved_team = Team.objects.create(
+            name="Test involved team",
+            founder=get_user_model().objects.create(username="test.big.boss")
+        )
+        self.involved_team.members.add(self.user)
+        self.involved_team.save()
         self.client.force_login(self.user)
 
     def test_retrieve_team_list_page(self):
@@ -170,13 +182,40 @@ class PrivateTeamTest(TestCase):
         response = self.client.get(TEAM_CREATE_URL)
         self.assertEquals(response.status_code, 200)
 
-    def assert_retrieve_team_related_view(self, url_name: str) -> None:
-        url = reverse(url_name, kwargs={"slug": self.team.slug})
+    def assert_retrieve_team_related_view(
+            self,
+            url_name: str,
+            must_pass: bool = True,
+            slug: str = None
+    ) -> None:
+        if not slug:
+            slug = self.founded_team.slug
+        url = reverse(url_name, kwargs={"slug": slug})
         response = self.client.get(url)
-        self.assertEquals(response.status_code, 200)
+        if must_pass:
+            self.assertEquals(response.status_code, 200)
+        else:
+            self.assertNotEquals(response.status_code, 200)
 
     def test_retrieve_team_detail_page(self):
-        self.assert_retrieve_team_related_view("task_manager:team-detail")
+        self.assert_retrieve_team_related_view(TEAM_DETAIL_URL_NAME)
 
-    def test_retrieve_team_update_page(self):
-        self.assert_retrieve_team_related_view("task_manager:team-update")
+    def test_retrieve_team_update_page_for_founder(self):
+        self.assert_retrieve_team_related_view(TEAM_UPDATE_URL_NAME)
+
+    def test_discard_team_update_page_for_not_founder(self):
+        self.assert_retrieve_team_related_view(
+            TEAM_UPDATE_URL_NAME,
+            must_pass=False,
+            slug=self.involved_team.slug
+        )
+
+    def test_retrieve_team_delete_page_for_founder(self):
+        self.assert_retrieve_team_related_view(TEAM_DELETE_URL_NAME)
+
+    def test_discard_team_delete_page_for_not_founder(self):
+        self.assert_retrieve_team_related_view(
+            TEAM_DELETE_URL_NAME,
+            must_pass=False,
+            slug=self.involved_team.slug
+        )

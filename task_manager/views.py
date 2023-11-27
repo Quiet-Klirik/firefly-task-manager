@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import generic
@@ -99,3 +100,18 @@ class TeamDetailView(LoginRequiredMixin, generic.DetailView):
 class TeamUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Team
     form_class = TeamForm
+
+    def get(self, request, *args, **kwargs):
+        if request.user != self.get_object().founder:
+            return HttpResponseForbidden("Access denied")
+        return super().get(self, request, *args, **kwargs)
+
+
+class TeamDeleteView(LoginRequiredMixin, generic.DeleteView):
+    model = Team
+    success_url = reverse_lazy("task_manager:team-list")
+
+    def get(self, request, *args, **kwargs):
+        if request.user != self.get_object().founder:
+            return HttpResponseForbidden("Access denied")
+        return super().get(self, request, *args, **kwargs)
