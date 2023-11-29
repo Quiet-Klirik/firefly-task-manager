@@ -118,7 +118,7 @@ class PublicTeamTests(TestCase):
     def assert_team_related_view_login_required(self, url_name: str) -> None:
         user = get_user_model().objects.create(username="test.user")
         team = Team.objects.create(name="Test team", founder=user)
-        url = reverse(url_name, kwargs={"slug": team.slug})
+        url = reverse(url_name, kwargs={"team_slug": team.slug})
         assert_login_required(self, url)
 
     def test_team_detail_login_required(self):
@@ -190,7 +190,7 @@ class PrivateTeamTest(TestCase):
     ) -> None:
         if not slug:
             slug = self.founded_team.slug
-        url = reverse(url_name, kwargs={"slug": slug})
+        url = reverse(url_name, kwargs={"team_slug": slug})
         response = self.client.get(url)
         if must_pass:
             self.assertEquals(response.status_code, 200)

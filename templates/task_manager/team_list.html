@@ -4,7 +4,7 @@
 <ul>
   {% for team in involved_teams %}
     <li>
-      <a href="{% url 'task_manager:team-detail' slug=team.slug %}">{{ team.name }}</a>
+      <a href="{% url 'task_manager:team-detail' team_slug=team.slug %}">{{ team.name }}</a>
     </li>
   {% empty %}
     <h3>There are no involved teams</h3>
@@ -16,7 +16,7 @@
 <ul>
   {% for team in founded_teams %}
     <li>
-      <a href="{% url 'task_manager:team-detail' slug=team.slug %}">{{ team.name }}</a>
+      <a href="{% url 'task_manager:team-detail' team_slug=team.slug %}">{{ team.name }}</a>
     </li>
   {% endfor %}
   <li>

@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseForbidden
@@ -88,30 +90,42 @@ class TeamCreateView(LoginRequiredMixin, generic.CreateView):
 
 class TeamDetailView(LoginRequiredMixin, generic.DetailView):
     model = Team
+    slug_url_kwarg = "team_slug"
 
     def get_object(self, queryset=None):
         return self.model.objects.select_related(
             "founder"
         ).prefetch_related(
             "members", "projects"
-        ).get(slug=self.kwargs.get("slug"))
+        ).get(slug=self.kwargs.get("team_slug"))
 
 
-class TeamUpdateView(LoginRequiredMixin, generic.UpdateView):
+class FounderLoginRequiredMixin(LoginRequiredMixin):
+    permission_denied_message = "Access denied"
+
+    @abstractmethod
+    def get_founder(self):
+        pass
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user != self.get_founder():
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class TeamUpdateView(FounderLoginRequiredMixin, generic.UpdateView):
     model = Team
     form_class = TeamForm
+    slug_url_kwarg = "team_slug"
 
-    def get(self, request, *args, **kwargs):
-        if request.user != self.get_object().founder:
-            return HttpResponseForbidden("Access denied")
-        return super().get(self, request, *args, **kwargs)
+    def get_founder(self):
+        return self.get_object().founder
 
 
-class TeamDeleteView(LoginRequiredMixin, generic.DeleteView):
+class TeamDeleteView(FounderLoginRequiredMixin, generic.DeleteView):
     model = Team
+    slug_url_kwarg = "team_slug"
     success_url = reverse_lazy("task_manager:team-list")
 
-    def get(self, request, *args, **kwargs):
-        if request.user != self.get_object().founder:
-            return HttpResponseForbidden("Access denied")
-        return super().get(self, request, *args, **kwargs)
+    def get_founder(self):
+        return self.get_object().founder
