@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -17,6 +15,7 @@ TEAM_CREATE_URL = reverse("task_manager:team-create")
 TEAM_DETAIL_URL_NAME = "task_manager:team-detail"
 TEAM_UPDATE_URL_NAME = "task_manager:team-update"
 TEAM_DELETE_URL_NAME = "task_manager:team-delete"
+TEAM_KICK_MEMBER_URL_NAME = "task_manager:team-kick-member"
 
 
 def assert_login_required(test_case_obj: TestCase, url: str) -> None:
@@ -87,7 +86,10 @@ class PrivateUserTests(TestCase):
 
     def test_redirect_user_profile_redirect_url(self):
         response = self.client.get(USER_PROFILE_REDIRECT_URL)
-        expected_url = reverse(USER_PROFILE_URL_NAME, kwargs={"slug": self.user.username})
+        expected_url = reverse(
+            USER_PROFILE_URL_NAME,
+            kwargs={"slug": self.user.username}
+        )
         self.assertRedirects(response, expected_url)
 
     def test_retrieve_user_profile_edit_page(self):
@@ -135,6 +137,19 @@ class PublicTeamTests(TestCase):
         self.assert_team_related_view_login_required(
             TEAM_DELETE_URL_NAME
         )
+
+    def test_team_kick_member_login_required(self):
+        user = get_user_model().objects.create(username="test.user")
+        team = Team.objects.create(name="Test team", founder=user)
+        team.members.add(user)
+        url = reverse(
+            TEAM_KICK_MEMBER_URL_NAME,
+            kwargs={
+                "team_slug": team.slug,
+                "member_username": user.username
+            }
+        )
+        assert_login_required(self, url)
 
 
 class PrivateTeamTest(TestCase):
@@ -218,4 +233,37 @@ class PrivateTeamTest(TestCase):
             TEAM_DELETE_URL_NAME,
             must_pass=False,
             slug=self.involved_team.slug
+        )
+
+    def assert_team_kick_member_url_correct_access(
+            self,
+            team: Team,
+            expected_status_code: int,
+            member_must_be_kicked: bool = False
+    ):
+        several_person = get_user_model().objects.create(
+            username="test.several.person"
+        )
+        team.members.add(several_person)
+        team.save()
+        url = reverse(
+            TEAM_KICK_MEMBER_URL_NAME,
+            kwargs={
+                "team_slug": team.slug,
+                "member_username": several_person.username
+            }
+        )
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, expected_status_code)
+        if member_must_be_kicked:
+            self.assertNotIn(several_person, team.members.all())
+
+    def test_retrieve_team_kick_member_url_for_founder(self):
+        self.assert_team_kick_member_url_correct_access(
+            self.founded_team, 302, True
+        )
+
+    def test_discard_team_kick_member_url_for_not_founder(self):
+        self.assert_team_kick_member_url_correct_access(
+            self.involved_team, 403
         )

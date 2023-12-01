@@ -3,7 +3,7 @@ from abc import abstractmethod
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseForbidden
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import generic
 
@@ -129,3 +129,33 @@ class TeamDeleteView(FounderLoginRequiredMixin, generic.DeleteView):
 
     def get_founder(self):
         return self.get_object().founder
+
+
+class TeamKickMemberView(FounderLoginRequiredMixin, generic.DetailView):
+    model = Team
+    slug_url_kwarg = "team_slug"
+
+    def get_object(self, queryset=None):
+        team_slug = self.kwargs.get(self.slug_url_kwarg)
+        return get_object_or_404(
+            self.model.objects.select_related("founder"),
+            slug=team_slug
+        )
+
+    def get_member(self):
+        member_username = self.kwargs.get("member_username")
+        member = self.get_object().members.get(username=member_username)
+        return member
+
+    def get_founder(self):
+        return self.get_object().founder
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "task_manager:team-detail",
+            kwargs={"team_slug": self.get_object().slug}
+        )
+
+    def get(self, request, *args, **kwargs):
+        self.get_object().members.remove(self.get_member())
+        return redirect(self.get_success_url())

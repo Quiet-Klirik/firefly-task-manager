@@ -1,7 +1,14 @@
 from django.urls import path
 
-from task_manager.views import HomePageView, TeamListView, TeamCreateView, \
-    TeamDetailView, TeamUpdateView, TeamDeleteView
+from task_manager.views import (
+    HomePageView,
+    TeamListView,
+    TeamCreateView,
+    TeamDetailView,
+    TeamUpdateView,
+    TeamDeleteView,
+    TeamKickMemberView
+)
 
 urlpatterns = [
     path("", HomePageView.as_view(), name="index"),
@@ -21,6 +28,11 @@ urlpatterns = [
         "<str:team_slug>/delete/",
         TeamDeleteView.as_view(),
         name="team-delete"
+    ),
+    path(
+        "<str:team_slug>/kick/<str:member_username>/",
+        TeamKickMemberView.as_view(),
+        name="team-kick-member"
     )
 ]
 

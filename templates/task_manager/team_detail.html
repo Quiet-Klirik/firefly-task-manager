@@ -9,7 +9,10 @@
 <div>
   Members :
   {% for member in object.members.all %}
-    <a href="{% url 'profile' slug=member.username %}">{{ member.first_name }} {{ member.last_name }}</a>,
+    <a href="{% url 'profile' slug=member.username %}">{{ member.first_name }} {{ member.last_name }}</a>
+    {% if user == object.founder %}
+      <a href="{% url 'task_manager:team-kick-member' team_slug=object.slug member_username=member.username %}">-</a>
+    {% endif %}
   {% empty %}
     no members
   {% endfor %}
