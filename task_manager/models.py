@@ -68,7 +68,10 @@ class Team(models.Model):
         ordering = ["name"]
 
     def get_absolute_url(self):
-        return reverse("task_manager:team-detail", kwargs={"slug": self.slug})
+        return reverse(
+            "task_manager:team-detail",
+            kwargs={"team_slug": self.slug}
+        )
 
     def save(
             self,
