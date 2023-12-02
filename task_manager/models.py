@@ -86,7 +86,7 @@ class Team(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    slug = models.SlugField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     description = models.TextField(blank=True)
     working_team = models.ForeignKey(
         Team,
