@@ -23,6 +23,6 @@
     <li>{{ project.name }}</li>
   {% endfor %}
   {% if object.founder == user %}
-    <li><a href="#">+</a></li>
+    <li><a href="{% url 'task_manager:project-create' team_slug=object.slug %}">+</a></li>
   {% endif %}
 </ul>

@@ -7,7 +7,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import generic
 
-from task_manager.forms import UserRegistrationForm, TeamForm
+from task_manager.forms import UserRegistrationForm, TeamForm, ProjectForm
 from task_manager.models import Team, Project, Worker
 
 
@@ -159,3 +159,32 @@ class TeamKickMemberView(FounderLoginRequiredMixin, generic.DetailView):
     def get(self, request, *args, **kwargs):
         self.get_object().members.remove(self.get_member())
         return redirect(self.get_success_url())
+
+
+class ProjectCreateView(FounderLoginRequiredMixin, generic.CreateView):
+    model = Project
+    form_class = ProjectForm
+    team = None
+
+    def get_team(self) -> Team:
+        if not self.team:
+            team_slug = self.kwargs.get("team_slug")
+            team = get_object_or_404(
+                Team.objects.select_related("founder"),
+                slug=team_slug
+            )
+            self.team = team
+        return self.team
+
+    def get_founder(self):
+        return self.get_team().founder
+
+    def form_valid(self, form):
+        form.instance.working_team = self.get_team()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "task_manager:team-detail",
+            kwargs={"team_slug": self.get_team().slug}
+        )

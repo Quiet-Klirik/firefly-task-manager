@@ -7,7 +7,7 @@ from task_manager.views import (
     TeamDetailView,
     TeamUpdateView,
     TeamDeleteView,
-    TeamKickMemberView
+    TeamKickMemberView, ProjectCreateView
 )
 
 urlpatterns = [
@@ -33,6 +33,11 @@ urlpatterns = [
         "<str:team_slug>/kick/<str:member_username>/",
         TeamKickMemberView.as_view(),
         name="team-kick-member"
+    ),
+    path(
+        "<str:team_slug>/create-project/",
+        ProjectCreateView.as_view(),
+        name="project-create"
     )
 ]
 

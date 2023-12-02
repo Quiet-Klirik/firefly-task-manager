@@ -16,6 +16,7 @@ TEAM_DETAIL_URL_NAME = "task_manager:team-detail"
 TEAM_UPDATE_URL_NAME = "task_manager:team-update"
 TEAM_DELETE_URL_NAME = "task_manager:team-delete"
 TEAM_KICK_MEMBER_URL_NAME = "task_manager:team-kick-member"
+PROJECT_CREATE_URL_NAME = "task_manager:project-create"
 
 
 def assert_login_required(test_case_obj: TestCase, url: str) -> None:
@@ -266,4 +267,78 @@ class PrivateTeamTest(TestCase):
     def test_discard_team_kick_member_url_for_not_founder(self):
         self.assert_team_kick_member_url_correct_access(
             self.involved_team, 403
+        )
+
+
+class PublicProjectTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="test.user",
+            password="test_password"
+        )
+        self.team = Team.objects.create(
+            name="Test founded team",
+            founder=self.user
+        )
+
+    def assert_login_required_with_kwargs(self, url_name, **kwargs):
+        url = reverse(url_name, kwargs=kwargs)
+        assert_login_required(self, url)
+
+    def test_project_create_login_required(self):
+        self.assert_login_required_with_kwargs(
+            PROJECT_CREATE_URL_NAME,
+            team_slug=self.team.slug
+        )
+
+
+class PrivateProjectTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="test.user",
+            password="test_password"
+        )
+        self.founded_team = Team.objects.create(
+            name="Test founded team",
+            founder=self.user
+        )
+        self.involved_team = Team.objects.create(
+            name="Test involved team",
+            founder=get_user_model().objects.create(username="test.big.boss")
+        )
+        self.founded_project = Project.objects.create(
+            name="Founded project",
+            working_team=self.founded_team
+        )
+        self.involved_project = Project.objects.create(
+            name="Involved project",
+            working_team=self.involved_team
+        )
+        self.client.force_login(self.user)
+
+    def assert_url_access_with_kwargs(
+            self,
+            url_name: str,
+            must_retrieve: bool,
+            **kwargs
+    ):
+        url = reverse(url_name, kwargs=kwargs)
+        response = self.client.get(url)
+        if must_retrieve:
+            self.assertEquals(response.status_code, 200)
+        else:
+            self.assertNotEquals(response.status_code, 200)
+
+    def test_retrieve_project_create_page_for_founder(self):
+        self.assert_url_access_with_kwargs(
+            PROJECT_CREATE_URL_NAME,
+            True,
+            team_slug=self.founded_team.slug
+        )
+
+    def test_discard_project_create_page_for_not_founder(self):
+        self.assert_url_access_with_kwargs(
+            PROJECT_CREATE_URL_NAME,
+            False,
+            team_slug=self.involved_team.slug
         )
