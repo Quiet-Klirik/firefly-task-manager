@@ -20,6 +20,7 @@ PROJECT_CREATE_URL_NAME = "task_manager:project-create"
 PROJECT_DETAIL_URL_NAME = "task_manager:project-detail"
 PROJECT_LANDING_URL_NAME = "task_manager:project-landing"
 PROJECT_MEMBER_TASKS_URL_NAME = "task_manager:project-member-tasks"
+PROJECT_UPDATE_URL_NAME = "task_manager:project-update"
 
 
 def assert_url_access(
@@ -329,6 +330,16 @@ class PublicProjectTests(TestCase):
             user_slug=self.user.username
         )
 
+    def test_project_update_login_required(self):
+        assert_url_access(
+            self,
+            PROJECT_UPDATE_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+
 
 class PrivateProjectTests(TestCase):
     def setUp(self) -> None:
@@ -401,4 +412,22 @@ class PrivateProjectTests(TestCase):
             team_slug=self.founded_team.slug,
             project_slug=self.founded_project.slug,
             user_slug=self.user.username
+        )
+
+    def test_retrieve_project_update_page_for_founder(self):
+        assert_url_access(
+            self,
+            PROJECT_UPDATE_URL_NAME,
+            team_slug=self.founded_team.slug,
+            project_slug=self.founded_project.slug
+        )
+
+    def test_retrieve_project_update_page_for_not_founder(self):
+        assert_url_access(
+            self,
+            PROJECT_UPDATE_URL_NAME,
+            200,
+            False,
+            team_slug=self.involved_team.slug,
+            project_slug=self.involved_project.slug
         )

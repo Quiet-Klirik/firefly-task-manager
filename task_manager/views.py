@@ -243,3 +243,22 @@ class ProjectMemberTasksView(LoginRequiredMixin, generic.DetailView):
             project=project
         )
         return context
+
+
+class ProjectUpdateView(FounderLoginRequiredMixin, generic.UpdateView):
+    model = Project
+    form_class = ProjectForm
+
+    def get_object(self, queryset=None):
+        project_slug = self.kwargs.get("project_slug")
+        return get_object_or_404(
+            self.model.objects.select_related("working_team__founder"),
+            slug=project_slug
+        )
+
+    def get_founder(self):
+        return self.get_object().working_team.founder
+
+    def form_valid(self, form):
+        form.instance.working_team = self.get_object().working_team
+        return super().form_valid(form)

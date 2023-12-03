@@ -11,7 +11,7 @@ from task_manager.views import (
     ProjectCreateView,
     ProjectMembersView,
     ProjectLandingView,
-    ProjectMemberTasksView
+    ProjectMemberTasksView, ProjectUpdateView
 )
 
 urlpatterns = [
@@ -52,6 +52,11 @@ urlpatterns = [
         "<str:team_slug>/<str:project_slug>/landing/",
         ProjectLandingView.as_view(),
         name="project-landing"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/edit/",
+        ProjectUpdateView.as_view(),
+        name="project-update"
     ),
     path(
         "<str:team_slug>/<str:project_slug>/<str:user_slug>/",
