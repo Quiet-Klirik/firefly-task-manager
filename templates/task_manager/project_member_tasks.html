@@ -1,0 +1,20 @@
+<h1>{{ object.username }}</h1>
+{{ object.position.name }}
+
+<h2>Assigned tasks</h2>
+<ul>
+  {% for task in assigned_tasks %}
+  	{{ task }}
+  {% empty %}
+    No tasks
+  {% endfor %}
+</ul>
+
+<h2>Requested tasks</h2>
+<ul>
+  {% for task in requested_tasks %}
+  	{{ task }}
+  {% empty %}
+    No tasks
+  {% endfor %}
+</ul>

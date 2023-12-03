@@ -19,6 +19,7 @@ TEAM_KICK_MEMBER_URL_NAME = "task_manager:team-kick-member"
 PROJECT_CREATE_URL_NAME = "task_manager:project-create"
 PROJECT_DETAIL_URL_NAME = "task_manager:project-detail"
 PROJECT_LANDING_URL_NAME = "task_manager:project-landing"
+PROJECT_MEMBER_TASKS_URL_NAME = "task_manager:project-member-tasks"
 
 
 def assert_url_access(
@@ -317,6 +318,17 @@ class PublicProjectTests(TestCase):
         )
         self.assertTemplateUsed(response, "task_manager/project_landing.html")
 
+    def test_project_member_tasks_login_required(self):
+        assert_url_access(
+            self,
+            PROJECT_MEMBER_TASKS_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            user_slug=self.user.username
+        )
+
 
 class PrivateProjectTests(TestCase):
     def setUp(self) -> None:
@@ -332,6 +344,8 @@ class PrivateProjectTests(TestCase):
             name="Test involved team",
             founder=get_user_model().objects.create(username="test.big.boss")
         )
+        self.involved_team.members.add(self.user)
+        self.involved_team.save()
         self.founded_project = Project.objects.create(
             name="Founded project",
             working_team=self.founded_team
@@ -364,4 +378,27 @@ class PrivateProjectTests(TestCase):
             PROJECT_DETAIL_URL_NAME,
             team_slug=self.founded_team.slug,
             project_slug=self.founded_project.slug
+        )
+
+    def test_retrieve_project_member_tasks_page_template_used(self):
+        response = assert_url_access(
+            self,
+            PROJECT_MEMBER_TASKS_URL_NAME,
+            team_slug=self.involved_team.slug,
+            project_slug=self.involved_project.slug,
+            user_slug=self.user.username
+        )
+        self.assertTemplateUsed(
+            response,
+            "task_manager/project_member_tasks.html"
+        )
+
+    def test_discard_project_member_tasks_page_for_not_member(self):
+        assert_url_access(
+            self,
+            PROJECT_MEMBER_TASKS_URL_NAME,
+            404,
+            team_slug=self.founded_team.slug,
+            project_slug=self.founded_project.slug,
+            user_slug=self.user.username
         )

@@ -207,3 +207,39 @@ class ProjectMembersView(LoginRequiredMixin, ProjectDetailView):
 
 class ProjectLandingView(ProjectDetailView):
     template_name = "task_manager/project_landing.html"
+
+
+class ProjectMemberTasksView(LoginRequiredMixin, generic.DetailView):
+    model = get_user_model()
+    slug_field = "username"
+    slug_url_kwarg = "user_slug"
+    template_name = "task_manager/project_member_tasks.html"
+    project = None
+
+    def get_project(self):
+        if not self.project:
+            project_slug = self.kwargs.get("project_slug")
+            project = Project.objects.select_related(
+                "working_team"
+            ).get(slug=project_slug)
+            self.project = project
+        return self.project
+
+    def get_object(self, queryset=None):
+        user_username = self.kwargs.get("user_slug")
+        return get_object_or_404(
+            self.get_project().working_team.members.select_related("position"),
+            username=user_username
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.get_project()
+        member = self.get_object()
+        context["requested_tasks"] = member.requested_tasks.filter(
+            project=project
+        )
+        context["assigned_tasks"] = member.assigned_tasks.filter(
+            project=project
+        )
+        return context
