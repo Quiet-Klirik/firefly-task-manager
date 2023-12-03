@@ -188,3 +188,22 @@ class ProjectCreateView(FounderLoginRequiredMixin, generic.CreateView):
             "task_manager:team-detail",
             kwargs={"team_slug": self.get_team().slug}
         )
+
+
+class ProjectDetailView(generic.DetailView):
+    model = Project
+    queryset = Project.objects.select_related(
+        "working_team__founder"
+    ).prefetch_related("working_team__members")
+
+    def get_object(self, queryset=None):
+        project_slug = self.kwargs.get("project_slug")
+        return self.queryset.get(slug=project_slug)
+
+
+class ProjectMembersView(LoginRequiredMixin, ProjectDetailView):
+    queryset = Project.objects.prefetch_related("working_team__members")
+
+
+class ProjectLandingView(ProjectDetailView):
+    template_name = "task_manager/project_landing.html"

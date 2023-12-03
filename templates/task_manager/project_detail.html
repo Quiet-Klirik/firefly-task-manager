@@ -1,0 +1,8 @@
+<a href="{% url 'task_manager:project-landing' team_slug=object.working_team.slug project_slug=object.slug %}">Landing</a>
+<h1>{{ object.name }}</h1>
+{{ object.slug }}
+<br><br>
+<h2>Members</h2>
+<div>
+  {% for member in object.working_team.members.all %}<a href="#">{{ member }}</a>, {% empty %}No members{% endfor %}
+</div>

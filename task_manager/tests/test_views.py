@@ -17,6 +17,8 @@ TEAM_UPDATE_URL_NAME = "task_manager:team-update"
 TEAM_DELETE_URL_NAME = "task_manager:team-delete"
 TEAM_KICK_MEMBER_URL_NAME = "task_manager:team-kick-member"
 PROJECT_CREATE_URL_NAME = "task_manager:project-create"
+PROJECT_DETAIL_URL_NAME = "task_manager:project-detail"
+PROJECT_LANDING_URL_NAME = "task_manager:project-landing"
 
 
 def assert_url_access(
@@ -282,6 +284,10 @@ class PublicProjectTests(TestCase):
             name="Test founded team",
             founder=self.user
         )
+        self.project = Project.objects.create(
+            name="Test founded project",
+            working_team=self.team
+        )
 
     def test_project_create_login_required(self):
         assert_url_access(
@@ -291,6 +297,25 @@ class PublicProjectTests(TestCase):
             False,
             team_slug=self.team.slug
         )
+
+    def test_project_detail_login_required(self):
+        assert_url_access(
+            self,
+            PROJECT_DETAIL_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+
+    def test_project_landing_template_used(self):
+        response = assert_url_access(
+            self,
+            PROJECT_LANDING_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+        self.assertTemplateUsed(response, "task_manager/project_landing.html")
 
 
 class PrivateProjectTests(TestCase):
@@ -331,4 +356,12 @@ class PrivateProjectTests(TestCase):
             200,
             False,
             team_slug=self.involved_team.slug
+        )
+
+    def test_retrieve_project_detail_page(self):
+        assert_url_access(
+            self,
+            PROJECT_DETAIL_URL_NAME,
+            team_slug=self.founded_team.slug,
+            project_slug=self.founded_project.slug
         )
