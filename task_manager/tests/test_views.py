@@ -21,6 +21,7 @@ PROJECT_DETAIL_URL_NAME = "task_manager:project-detail"
 PROJECT_LANDING_URL_NAME = "task_manager:project-landing"
 PROJECT_MEMBER_TASKS_URL_NAME = "task_manager:project-member-tasks"
 PROJECT_UPDATE_URL_NAME = "task_manager:project-update"
+PROJECT_DELETE_URL_NAME = "task_manager:project-delete"
 
 
 def assert_url_access(
@@ -340,6 +341,16 @@ class PublicProjectTests(TestCase):
             project_slug=self.project.slug
         )
 
+    def test_project_delete_login_required(self):
+        assert_url_access(
+            self,
+            PROJECT_DELETE_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+
 
 class PrivateProjectTests(TestCase):
     def setUp(self) -> None:
@@ -426,6 +437,24 @@ class PrivateProjectTests(TestCase):
         assert_url_access(
             self,
             PROJECT_UPDATE_URL_NAME,
+            200,
+            False,
+            team_slug=self.involved_team.slug,
+            project_slug=self.involved_project.slug
+        )
+
+    def test_retrieve_project_delete_page_for_founder(self):
+        assert_url_access(
+            self,
+            PROJECT_DELETE_URL_NAME,
+            team_slug=self.founded_team.slug,
+            project_slug=self.founded_project.slug
+        )
+
+    def test_discard_project_delete_page_for_not_founder(self):
+        assert_url_access(
+            self,
+            PROJECT_DELETE_URL_NAME,
             200,
             False,
             team_slug=self.involved_team.slug,
