@@ -422,7 +422,7 @@ class PrivateProjectTests(TestCase):
             project_slug=self.founded_project.slug
         )
 
-    def test_retrieve_project_update_page_for_not_founder(self):
+    def test_discard_project_update_page_for_not_founder(self):
         assert_url_access(
             self,
             PROJECT_UPDATE_URL_NAME,
