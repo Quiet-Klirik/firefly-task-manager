@@ -2,7 +2,19 @@
 <h1>{{ object.name }}</h1>
 {{ object.slug }}
 <br><br>
+{% if user == object.working_team.founder %}
+  <a href="{% url 'task_manager:project-update' team_slug=object.working_team.slug project_slug=object.slug %}">Edit</a>
+  _____
+  <a href="{% url 'task_manager:project-delete' team_slug=object.working_team.slug project_slug=object.slug %}">Delete</a>
+{% endif %}
 <h2>Members</h2>
 <div>
-  {% for member in object.working_team.members.all %}<a href="#">{{ member }}</a>, {% empty %}No members{% endfor %}
+  {% for member in object.working_team.members.all %}
+    <a href="{% url 'task_manager:project-member-tasks' team_slug=object.working_team.slug project_slug=object.slug user_slug=member.username %}">{{ member }}</a>,
+    {% if member == user %}
+    	(You)
+    {% endif %}
+  {% empty %}
+    No members
+  {% endfor %}
 </div>

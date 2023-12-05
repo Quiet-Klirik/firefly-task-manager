@@ -1,4 +1,11 @@
-<h1>{{ object.username }}</h1>
+<h1>
+  <a href="{% url 'task_manager:project-detail' team_slug=project.working_team.slug project_slug=project.slug %}">
+    {{ project.name }}
+  </a> - {% if object == user %}
+  	Your
+  {% else %}
+    {{ object.username }}
+  {% endif %} tasks</h1>
 {{ object.position.name }}
 
 <h2>Assigned tasks</h2>

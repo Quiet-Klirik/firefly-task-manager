@@ -1,5 +1,11 @@
 {{ object.slug }}
 <h1>{{ object.name }}</h1>
+{% if user == object.founder %}
+  <a href="{% url 'task_manager:team-update' team_slug=object.slug %}">Edit</a>
+  _____
+  <a href="{% url 'task_manager:team-delete' team_slug=object.slug %}">Delete</a>
+  <br><br>
+{% endif %}
 <div>
   Founder:
   <a href="{% url 'profile' slug=object.founder.username %}">
@@ -20,7 +26,13 @@
 <h2>Projects:</h2>
 <ul>
   {% for project in object.projects.all %}
-    <li><a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}">{{ project.name }}</a></li>
+    <li>
+      {{ project.name }}
+      (<a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}">Open</a>)
+      {% if user in object.members.all %}
+        <a href="{% url 'task_manager:project-member-tasks' team_slug=object.slug project_slug=project.slug user_slug=user.username %}">My tasks</a>
+      {% endif %}
+    </li>
   {% endfor %}
   {% if object.founder == user %}
     <li><a href="{% url 'task_manager:project-create' team_slug=object.slug %}">+</a></li>

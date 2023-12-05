@@ -236,6 +236,7 @@ class ProjectMemberTasksView(LoginRequiredMixin, generic.DetailView):
         context = super().get_context_data(**kwargs)
         project = self.get_project()
         member = self.get_object()
+        context["project"] = project
         context["requested_tasks"] = member.requested_tasks.filter(
             project=project
         )
