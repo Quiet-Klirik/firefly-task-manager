@@ -358,15 +358,18 @@ class PrivateProjectTests(TestCase):
             username="test.user",
             password="test_password"
         )
+        self.member = get_user_model().objects.create_user(username="member")
         self.founded_team = Team.objects.create(
             name="Test founded team",
             founder=self.user
         )
+        self.founded_team.members.add(self.member)
+        self.founded_team.save()
         self.involved_team = Team.objects.create(
             name="Test involved team",
             founder=get_user_model().objects.create(username="test.big.boss")
         )
-        self.involved_team.members.add(self.user)
+        self.involved_team.members.add(self.user, self.member)
         self.involved_team.save()
         self.founded_project = Project.objects.create(
             name="Founded project",
@@ -394,10 +397,20 @@ class PrivateProjectTests(TestCase):
             team_slug=self.involved_team.slug
         )
 
-    def test_retrieve_project_detail_page(self):
+    def test_retrieve_project_members_page_for_member(self):
         assert_url_access(
             self,
             PROJECT_DETAIL_URL_NAME,
+            team_slug=self.involved_team.slug,
+            project_slug=self.involved_project.slug
+        )
+
+    def test_discard_project_members_page_for_not_member(self):
+        assert_url_access(
+            self,
+            PROJECT_DETAIL_URL_NAME,
+            200,
+            False,
             team_slug=self.founded_team.slug,
             project_slug=self.founded_project.slug
         )
@@ -415,7 +428,27 @@ class PrivateProjectTests(TestCase):
             "task_manager/project_member_tasks.html"
         )
 
+    def test_retrieve_project_member_tasks_page_for_member(self):
+        assert_url_access(
+            self,
+            PROJECT_MEMBER_TASKS_URL_NAME,
+            team_slug=self.involved_team.slug,
+            project_slug=self.involved_project.slug,
+            user_slug=self.member.username
+        )
+
     def test_discard_project_member_tasks_page_for_not_member(self):
+        assert_url_access(
+            self,
+            PROJECT_MEMBER_TASKS_URL_NAME,
+            200,
+            False,
+            team_slug=self.founded_team.slug,
+            project_slug=self.founded_project.slug,
+            user_slug=self.member.username
+        )
+
+    def test_discard_project_member_tasks_page_for_non_existent_member(self):
         assert_url_access(
             self,
             PROJECT_MEMBER_TASKS_URL_NAME,
