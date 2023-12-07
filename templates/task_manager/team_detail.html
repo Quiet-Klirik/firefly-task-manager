@@ -28,7 +28,11 @@
   {% for project in object.projects.all %}
     <li>
       {{ project.name }}
-      (<a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}">Open</a>)
+      {% if user in object.members.all %}
+        (<a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}">Open</a>)
+      {% else %}
+        (<a href="{% url 'task_manager:project-landing' team_slug=object.slug project_slug=project.slug %}">Landing</a>)
+      {% endif %}
       {% if user in object.members.all %}
         <a href="{% url 'task_manager:project-member-tasks' team_slug=object.slug project_slug=project.slug user_slug=user.username %}">My tasks</a>
       {% endif %}
