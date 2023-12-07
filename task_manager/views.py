@@ -108,9 +108,22 @@ class FounderLoginRequiredMixin(LoginRequiredMixin):
         pass
 
     def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
         if request.user != self.get_founder():
             return self.handle_no_permission()
-        return super().dispatch(request, *args, **kwargs)
+        return response
+
+
+class MemberLoginRequiredMixin(LoginRequiredMixin):
+    @abstractmethod
+    def get_members(self):
+        pass
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.user not in self.get_members():
+            return self.handle_no_permission()
+        return response
 
 
 class TeamUpdateView(FounderLoginRequiredMixin, generic.UpdateView):
@@ -201,15 +214,18 @@ class ProjectDetailView(generic.DetailView):
         return self.queryset.get(slug=project_slug)
 
 
-class ProjectMembersView(LoginRequiredMixin, ProjectDetailView):
+class ProjectMembersView(MemberLoginRequiredMixin, ProjectDetailView):
     queryset = Project.objects.prefetch_related("working_team__members")
+
+    def get_members(self):
+        return self.get_object().working_team.members.all()
 
 
 class ProjectLandingView(ProjectDetailView):
     template_name = "task_manager/project_landing.html"
 
 
-class ProjectMemberTasksView(LoginRequiredMixin, generic.DetailView):
+class ProjectMemberTasksView(MemberLoginRequiredMixin, generic.DetailView):
     model = get_user_model()
     slug_field = "username"
     slug_url_kwarg = "user_slug"
@@ -219,11 +235,14 @@ class ProjectMemberTasksView(LoginRequiredMixin, generic.DetailView):
     def get_project(self):
         if not self.project:
             project_slug = self.kwargs.get("project_slug")
-            project = Project.objects.select_related(
-                "working_team"
+            project = Project.objects.prefetch_related(
+                "working_team__members"
             ).get(slug=project_slug)
             self.project = project
         return self.project
+
+    def get_members(self):
+        return self.get_project().working_team.members.all()
 
     def get_object(self, queryset=None):
         user_username = self.kwargs.get("user_slug")
