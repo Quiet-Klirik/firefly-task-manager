@@ -2,13 +2,13 @@ from abc import abstractmethod
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import generic
 
-from task_manager.forms import UserRegistrationForm, TeamForm, ProjectForm
-from task_manager.models import Team, Project, Worker
+from task_manager.forms import UserRegistrationForm, TeamForm, ProjectForm, \
+    TaskForm, TaskForOneAssigneeForm
+from task_manager.models import Team, Project, Worker, Task
 
 
 class HomePageView(generic.TemplateView):
@@ -114,14 +114,17 @@ class FounderLoginRequiredMixin(LoginRequiredMixin):
         return response
 
 
-class MemberLoginRequiredMixin(LoginRequiredMixin):
+class MemberOrFounderLoginRequiredMixin(LoginRequiredMixin):
     @abstractmethod
-    def get_members(self):
+    def get_team(self) -> Team:
         pass
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if request.user not in self.get_members():
+        if (
+                request.user not in self.get_team().members.all()
+                and request.user != self.get_team().founder
+        ):
             return self.handle_no_permission()
         return response
 
@@ -214,35 +217,40 @@ class ProjectDetailView(generic.DetailView):
         return self.queryset.get(slug=project_slug)
 
 
-class ProjectMembersView(MemberLoginRequiredMixin, ProjectDetailView):
-    queryset = Project.objects.prefetch_related("working_team__members")
+class ProjectMembersView(MemberOrFounderLoginRequiredMixin, ProjectDetailView):
+    queryset = Project.objects.select_related(
+        "working_team__founder"
+    ).prefetch_related("working_team__members")
 
-    def get_members(self):
-        return self.get_object().working_team.members.all()
+    def get_team(self) -> Team:
+        return self.get_object().working_team
 
 
 class ProjectLandingView(ProjectDetailView):
     template_name = "task_manager/project_landing.html"
 
 
-class ProjectMemberTasksView(MemberLoginRequiredMixin, generic.DetailView):
+class ProjectMemberTasksView(
+    MemberOrFounderLoginRequiredMixin,
+    generic.DetailView
+):
     model = get_user_model()
     slug_field = "username"
     slug_url_kwarg = "user_slug"
     template_name = "task_manager/project_member_tasks.html"
     project = None
 
-    def get_project(self):
+    def get_project(self) -> Project:
         if not self.project:
             project_slug = self.kwargs.get("project_slug")
-            project = Project.objects.prefetch_related(
-                "working_team__members"
-            ).get(slug=project_slug)
+            project = Project.objects.select_related(
+                "working_team__founder"
+            ).prefetch_related("working_team__members").get(slug=project_slug)
             self.project = project
         return self.project
 
-    def get_members(self):
-        return self.get_project().working_team.members.all()
+    def get_team(self) -> Team:
+        return self.get_project().working_team
 
     def get_object(self, queryset=None):
         user_username = self.kwargs.get("user_slug")
@@ -302,3 +310,56 @@ class ProjectDeleteView(FounderLoginRequiredMixin, generic.DeleteView):
             "task_manager:team-detail",
             kwargs={"team_slug": self.get_object().working_team.slug}
         )
+
+
+class TaskCreateView(MemberOrFounderLoginRequiredMixin, generic.CreateView):
+    model = Task
+    form_class = TaskForm
+    project = None
+
+    def get_project(self) -> Project:
+        if not self.project:
+            project_slug = self.kwargs.get("project_slug")
+            project = Project.objects.select_related(
+                "working_team__founder"
+            ).prefetch_related("working_team__members").get(slug=project_slug)
+            self.project = project
+        return self.project
+
+    def get_team(self) -> Team:
+        return self.get_project().working_team
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["team_slug"] = self.kwargs.get("team_slug")
+        return initial
+
+    def form_valid(self, form):
+        form.instance.project = self.get_project()
+        form.instance.requester = self.request.user
+        return super().form_valid(form)
+
+    # def get_success_url(self):
+    #     return reverse_lazy(
+    #         "task_manager:project-member-tasks",
+    #         kwargs={
+    #             "team_slug": self.get_team().slug,
+    #             "project_slug": self.get_project().slug,
+    #             "user_slug": self.request.user.username,
+    #         }
+    #     )
+
+
+class TaskDetailView(MemberOrFounderLoginRequiredMixin, generic.DetailView):
+    model = Task
+
+    def get_object(self, queryset=None):
+        task_id = self.kwargs.get("task_id")
+        return self.model.objects.select_related(
+            "project__working_team__founder", "task_type", "requester"
+        ).prefetch_related(
+            "project__working_team__members", "assignees"
+        ).get(id=task_id)
+
+    def get_team(self) -> Team:
+        return self.get_object().project.working_team

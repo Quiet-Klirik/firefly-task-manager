@@ -1,0 +1,12 @@
+<h1><a href="{% url 'task_manager:project-detail' team_slug=object.project.working_team.slug project_slug=object.project.slug %}">{{ object.project }}</a> task - {{ object.name }} {% if object.is_completed %}✅{% endif %}</h1>
+tags: {% for tag in object.tags.all %}{{ tag }}{% endfor %}<br>
+deadline: {{ object.deadline }}<br>
+priority: {{ object.get_priority_display }}<br>
+task_type: {{ object.task_type.name }}<br>
+assignees: {% for assignee in object.assignees.all %}<a href="{% url 'profile' slug=assignee.username %}">{{ assignee }}</a>, {% endfor %}<br>
+requester: <a href="{% url 'profile' slug=object.requester.username %}">{{ object.requester }}</a>
+<p>
+  Description:<br>
+  {{ object.description }}
+</p>
+

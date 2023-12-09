@@ -11,7 +11,8 @@ from task_manager.views import (
     ProjectCreateView,
     ProjectMembersView,
     ProjectLandingView,
-    ProjectMemberTasksView, ProjectUpdateView, ProjectDeleteView
+    ProjectMemberTasksView, ProjectUpdateView, ProjectDeleteView,
+    TaskCreateView, TaskDetailView
 )
 
 urlpatterns = [
@@ -62,6 +63,16 @@ urlpatterns = [
         "<str:team_slug>/<str:project_slug>/delete/",
         ProjectDeleteView.as_view(),
         name="project-delete"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/",
+        TaskDetailView.as_view(),
+        name="task-detail"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/create-task/",
+        TaskCreateView.as_view(),
+        name="task-create"
     ),
     path(
         "<str:team_slug>/<str:project_slug>/<str:user_slug>/",

@@ -1,8 +1,10 @@
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from task_manager.models import Team, Project, Worker
+from task_manager.models import Team, Project, Worker, TaskType, Task
 
 HOME_PAGE_URL = reverse("task_manager:index")
 USER_REGISTER_URL = reverse("register")
@@ -22,6 +24,8 @@ PROJECT_LANDING_URL_NAME = "task_manager:project-landing"
 PROJECT_MEMBER_TASKS_URL_NAME = "task_manager:project-member-tasks"
 PROJECT_UPDATE_URL_NAME = "task_manager:project-update"
 PROJECT_DELETE_URL_NAME = "task_manager:project-delete"
+TASK_CREATE_URL_NAME = "task_manager:task-create"
+TASK_DETAIL_URL_NAME = "task_manager:task-detail"
 
 
 def assert_url_access(
@@ -492,4 +496,170 @@ class PrivateProjectTests(TestCase):
             False,
             team_slug=self.involved_team.slug,
             project_slug=self.involved_project.slug
+        )
+
+
+class PublicTaskTests(TestCase):
+    def setUp(self) -> None:
+        self.team = Team.objects.create(
+            name="Test founded team",
+        )
+        self.project = Project.objects.create(
+            name="Test founded project",
+            working_team=self.team
+        )
+        self.task_type = TaskType.objects.create(name="Test task type")
+        self.task = Task.objects.create(
+            name="Test task",
+            project=self.project,
+            deadline=datetime.date(2222, 2, 22),
+            task_type=self.task_type,
+        )
+
+    def test_task_create_login_required(self):
+        assert_url_access(
+            self,
+            TASK_CREATE_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+
+    def test_task_detail_login_required(self):
+        assert_url_access(
+            self,
+            TASK_DETAIL_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+
+class TeamFounderTaskTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="team.founder"
+        )
+        self.team = Team.objects.create(
+            name="Test founded team",
+            founder=self.user
+        )
+        self.project = Project.objects.create(
+            name="Test founded project",
+            working_team=self.team
+        )
+        self.task_type = TaskType.objects.create(name="Test task type")
+        self.task = Task.objects.create(
+            name="Test task",
+            project=self.project,
+            deadline=datetime.date(2222, 2, 22),
+            task_type=self.task_type,
+            requester=self.user
+        )
+        self.client.force_login(self.user)
+
+    def test_retrieve_task_create_page_for_founder(self):
+        assert_url_access(
+            self,
+            TASK_CREATE_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+
+    def test_retrieve_task_detail_page_for_founder(self):
+        assert_url_access(
+            self,
+            TASK_DETAIL_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+
+class MemberTaskTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="team.member"
+        )
+        self.team = Team.objects.create(
+            name="Test founded team"
+        )
+        self.team.members.add(self.user)
+        self.team.save()
+        self.project = Project.objects.create(
+            name="Test founded project",
+            working_team=self.team
+        )
+        self.task_type = TaskType.objects.create(name="Test task type")
+        self.task = Task.objects.create(
+            name="Test task",
+            project=self.project,
+            deadline=datetime.date(2222, 2, 22),
+            task_type=self.task_type,
+            requester=self.user
+        )
+        self.client.force_login(self.user)
+
+    def test_retrieve_task_create_page_for_member(self):
+        assert_url_access(
+            self,
+            TASK_CREATE_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+
+    def test_retrieve_task_detail_page_for_member(self):
+        assert_url_access(
+            self,
+            TASK_DETAIL_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+
+class NotInvolvedUserTaskTests(TestCase):
+    def setUp(self) -> None:
+        self.user = get_user_model().objects.create_user(
+            username="not.involved.user"
+        )
+        self.team = Team.objects.create(
+            name="Test founded team"
+        )
+        self.project = Project.objects.create(
+            name="Test founded project",
+            working_team=self.team
+        )
+        self.task_type = TaskType.objects.create(name="Test task type")
+        self.task = Task.objects.create(
+            name="Test task",
+            project=self.project,
+            deadline=datetime.date(2222, 2, 22),
+            task_type=self.task_type,
+            requester=get_user_model().objects.create_user(username="member")
+        )
+        self.client.force_login(self.user)
+
+    def test_retrieve_task_create_page_for_not_involved_user(self):
+        assert_url_access(
+            self,
+            TASK_CREATE_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug
+        )
+
+    def test_retrieve_task_detail_page_for_not_involved_user(self):
+        assert_url_access(
+            self,
+            TASK_DETAIL_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
         )
