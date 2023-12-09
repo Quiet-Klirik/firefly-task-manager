@@ -46,5 +46,6 @@ urlpatterns = [
         "accounts/profile/delete/",
         UserDeleteView.as_view(),
         name="profile-delete"
-    )
+    ),
+    path("select2/", include("django_select2.urls")),
 ]
