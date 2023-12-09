@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save, pre_delete
+from django.db import transaction
+from django.db.models.signals import post_save, pre_delete, m2m_changed
 from django.dispatch import receiver
 
 from task_manager.models import (
@@ -9,6 +10,12 @@ from task_manager.models import (
     Notification,
     Team
 )
+
+
+def on_transaction_commit(func):
+    def inner(*args, **kwargs):
+        transaction.on_commit(lambda: func(*args, **kwargs))
+    return inner
 
 
 @receiver(pre_delete, sender=Position)
@@ -53,6 +60,7 @@ def send_notification_to_assignees(
 
 
 @receiver(post_save, sender=Task)
+@on_transaction_commit
 def task_created(sender, instance: Task, created, **kwargs):
     if created:
         try:
@@ -66,10 +74,12 @@ def task_created(sender, instance: Task, created, **kwargs):
                                   "{task.requester.last_name} "
                                   "created a new task \"{task.name}\"")
             )
-        send_notification_to_assignees(instance, notification_type)
+        if instance.assignees.all():
+            send_notification_to_assignees(instance, notification_type)
 
 
 @receiver(post_save, sender=Task)
+@on_transaction_commit
 def task_updated(sender, instance, created, **kwargs):
     if not created and not instance.is_completed:
         try:
