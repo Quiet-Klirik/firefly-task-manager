@@ -20,8 +20,11 @@
 <h2>Requested tasks</h2>
 <ul>
   {% for task in requested_tasks %}
-  	{{ task }}
+  	<li><a href="{% url 'task_manager:task-detail' team_slug=project.working_team.slug project_slug=project.slug task_id=task.id %}">{{ task }}</a></li>
   {% empty %}
     No tasks
   {% endfor %}
+  {% if user == object %}
+  	<li><a href="{% url 'task_manager:task-create' team_slug=project.working_team.slug project_slug=project.slug%}">+</a></li>
+  {% endif %}
 </ul>
