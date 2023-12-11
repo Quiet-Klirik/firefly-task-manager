@@ -332,12 +332,9 @@ class TaskCreateView(MemberOrFounderLoginRequiredMixin, generic.CreateView):
     def get_initial(self):
         initial = super().get_initial()
         initial["team_slug"] = self.kwargs.get("team_slug")
+        initial["project"] = self.get_project()
+        initial["requester"] = self.request.user
         return initial
-
-    def form_valid(self, form):
-        form.instance.project = self.get_project()
-        form.instance.requester = self.request.user
-        return super().form_valid(form)
 
 
 class TaskAssignView(TaskCreateView):
@@ -364,3 +361,57 @@ class TaskDetailView(MemberOrFounderLoginRequiredMixin, generic.DetailView):
 
     def get_team(self) -> Team:
         return self.get_object().project.working_team
+
+
+class TaskRequesterLoginRequiredMixin(LoginRequiredMixin):
+    permission_denied_message = "Access denied"
+
+    @abstractmethod
+    def get_requester(self):
+        pass
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method == "GET" and request.user != self.get_requester():
+            return self.handle_no_permission()
+        return response
+
+
+class TaskUpdateView(TaskRequesterLoginRequiredMixin, generic.UpdateView):
+    model = Task
+    form_class = TaskForm
+
+    def get_object(self, queryset=None):
+        task_id = self.kwargs.get("task_id")
+        return self.model.objects.select_related(
+            "requester"
+        ).get(id=task_id)
+
+    def get_requester(self):
+        return self.get_object().requester
+
+
+class TaskDeleteView(TaskRequesterLoginRequiredMixin, generic.DeleteView):
+    model = Task
+
+    def get_object(self, queryset=None):
+        task_id = self.kwargs.get("task_id")
+        return self.model.objects.select_related(
+            "requester"
+        ).get(id=task_id)
+
+    def get_requester(self):
+        return self.get_object().requester
+
+    def get_success_url(self):
+        team_slug = self.kwargs.get("team_slug")
+        project_slug = self.kwargs.get("project_slug")
+        user_slug = self.request.user.username
+        return reverse_lazy(
+            "task_manager:project-member-tasks",
+            kwargs={
+                "team_slug": team_slug,
+                "project_slug": project_slug,
+                "user_slug": user_slug,
+            }
+        )

@@ -27,6 +27,8 @@ PROJECT_DELETE_URL_NAME = "task_manager:project-delete"
 TASK_CREATE_URL_NAME = "task_manager:task-create"
 TASK_ASSIGN_URL_NAME = "task_manager:project-member-assign-task"
 TASK_DETAIL_URL_NAME = "task_manager:task-detail"
+TASK_UPDATE_URL_NAME = "task_manager:task-update"
+TASK_DELETE_URL_NAME = "task_manager:task-delete"
 
 
 def assert_url_access(
@@ -551,6 +553,28 @@ class PublicTaskTests(TestCase):
             task_id=self.task.id
         )
 
+    def test_task_update_login_required(self):
+        assert_url_access(
+            self,
+            TASK_UPDATE_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+    def test_task_delete_login_required(self):
+        assert_url_access(
+            self,
+            TASK_DELETE_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
 
 class TeamFounderTaskTests(TestCase):
     def setUp(self) -> None:
@@ -573,7 +597,7 @@ class TeamFounderTaskTests(TestCase):
             project=self.project,
             deadline=datetime.date(2222, 2, 22),
             task_type=self.task_type,
-            requester=self.user
+            requester=self.member
         )
         self.client.force_login(self.user)
 
@@ -649,6 +673,50 @@ class MemberTaskTests(TestCase):
         assert_url_access(
             self,
             TASK_DETAIL_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+    def test_retrieve_task_update_page_for_requester(self):
+        assert_url_access(
+            self,
+            TASK_UPDATE_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+    def test_retrieve_task_delete_page_for_requester(self):
+        assert_url_access(
+            self,
+            TASK_DELETE_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+    def test_discard_task_update_page_for_not_requester(self):
+        self.client.logout()
+        self.client.force_login(self.member)
+        assert_url_access(
+            self,
+            TASK_UPDATE_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            task_id=self.task.id
+        )
+
+    def test_discard_task_delete_page_for_not_requester(self):
+        self.client.logout()
+        self.client.force_login(self.member)
+        assert_url_access(
+            self,
+            TASK_DELETE_URL_NAME,
+            200,
+            False,
             team_slug=self.team.slug,
             project_slug=self.project.slug,
             task_id=self.task.id
