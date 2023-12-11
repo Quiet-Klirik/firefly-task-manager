@@ -339,16 +339,6 @@ class TaskCreateView(MemberOrFounderLoginRequiredMixin, generic.CreateView):
         form.instance.requester = self.request.user
         return super().form_valid(form)
 
-    # def get_success_url(self):
-    #     return reverse_lazy(
-    #         "task_manager:project-member-tasks",
-    #         kwargs={
-    #             "team_slug": self.get_team().slug,
-    #             "project_slug": self.get_project().slug,
-    #             "user_slug": self.request.user.username,
-    #         }
-    #     )
-
 
 class TaskDetailView(MemberOrFounderLoginRequiredMixin, generic.DetailView):
     model = Task
