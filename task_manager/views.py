@@ -340,6 +340,17 @@ class TaskCreateView(MemberOrFounderLoginRequiredMixin, generic.CreateView):
         return super().form_valid(form)
 
 
+class TaskAssignView(TaskCreateView):
+    form_class = TaskForOneAssigneeForm
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user_username = self.kwargs.get("user_slug")
+        user = get_user_model().objects.get(username=user_username)
+        form.instance.assignees.add(user)
+        return response
+
+
 class TaskDetailView(MemberOrFounderLoginRequiredMixin, generic.DetailView):
     model = Task
 

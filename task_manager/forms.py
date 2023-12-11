@@ -147,5 +147,7 @@ class TaskForm(forms.ModelForm):
 
 class TaskForOneAssigneeForm(TaskForm):
     assignees = forms.ModelMultipleChoiceField(
-        queryset=None, widget=forms.HiddenInput, required=False
+        queryset=get_user_model().objects,
+        widget=forms.HiddenInput,
+        required=False
     )

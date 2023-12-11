@@ -25,6 +25,7 @@ PROJECT_MEMBER_TASKS_URL_NAME = "task_manager:project-member-tasks"
 PROJECT_UPDATE_URL_NAME = "task_manager:project-update"
 PROJECT_DELETE_URL_NAME = "task_manager:project-delete"
 TASK_CREATE_URL_NAME = "task_manager:task-create"
+TASK_ASSIGN_URL_NAME = "task_manager:project-member-assign-task"
 TASK_DETAIL_URL_NAME = "task_manager:task-detail"
 
 
@@ -504,6 +505,8 @@ class PublicTaskTests(TestCase):
         self.team = Team.objects.create(
             name="Test founded team",
         )
+        self.member = get_user_model().objects.create(username="member")
+        self.team.members.add(self.member)
         self.project = Project.objects.create(
             name="Test founded project",
             working_team=self.team
@@ -524,6 +527,17 @@ class PublicTaskTests(TestCase):
             False,
             team_slug=self.team.slug,
             project_slug=self.project.slug
+        )
+
+    def test_task_assign_login_required(self):
+        assert_url_access(
+            self,
+            TASK_ASSIGN_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            user_slug=self.member.username,
         )
 
     def test_task_detail_login_required(self):
@@ -547,6 +561,8 @@ class TeamFounderTaskTests(TestCase):
             name="Test founded team",
             founder=self.user
         )
+        self.member = get_user_model().objects.create(username="member")
+        self.team.members.add(self.member)
         self.project = Project.objects.create(
             name="Test founded project",
             working_team=self.team
@@ -569,6 +585,15 @@ class TeamFounderTaskTests(TestCase):
             project_slug=self.project.slug
         )
 
+    def test_retrieve_task_assign_page_for_founder(self):
+        assert_url_access(
+            self,
+            TASK_ASSIGN_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            user_slug=self.member.username,
+        )
+
     def test_retrieve_task_detail_page_for_founder(self):
         assert_url_access(
             self,
@@ -587,8 +612,8 @@ class MemberTaskTests(TestCase):
         self.team = Team.objects.create(
             name="Test founded team"
         )
-        self.team.members.add(self.user)
-        self.team.save()
+        self.member = get_user_model().objects.create(username="member")
+        self.team.members.add(self.user, self.member)
         self.project = Project.objects.create(
             name="Test founded project",
             working_team=self.team
@@ -611,6 +636,15 @@ class MemberTaskTests(TestCase):
             project_slug=self.project.slug
         )
 
+    def test_retrieve_task_assign_page_for_member(self):
+        assert_url_access(
+            self,
+            TASK_ASSIGN_URL_NAME,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            user_slug=self.member.username,
+        )
+
     def test_retrieve_task_detail_page_for_member(self):
         assert_url_access(
             self,
@@ -629,6 +663,8 @@ class NotInvolvedUserTaskTests(TestCase):
         self.team = Team.objects.create(
             name="Test founded team"
         )
+        self.member = get_user_model().objects.create(username="member")
+        self.team.members.add(self.member)
         self.project = Project.objects.create(
             name="Test founded project",
             working_team=self.team
@@ -639,7 +675,7 @@ class NotInvolvedUserTaskTests(TestCase):
             project=self.project,
             deadline=datetime.date(2222, 2, 22),
             task_type=self.task_type,
-            requester=get_user_model().objects.create_user(username="member")
+            requester=self.member
         )
         self.client.force_login(self.user)
 
@@ -651,6 +687,17 @@ class NotInvolvedUserTaskTests(TestCase):
             False,
             team_slug=self.team.slug,
             project_slug=self.project.slug
+        )
+
+    def test_retrieve_task_assign_page_for_not_involved_user(self):
+        assert_url_access(
+            self,
+            TASK_ASSIGN_URL_NAME,
+            200,
+            False,
+            team_slug=self.team.slug,
+            project_slug=self.project.slug,
+            user_slug=self.member.username,
         )
 
     def test_retrieve_task_detail_page_for_not_involved_user(self):

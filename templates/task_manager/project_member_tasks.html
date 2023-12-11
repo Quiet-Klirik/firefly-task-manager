@@ -5,7 +5,9 @@
   	Your
   {% else %}
     {{ object.username }}
-  {% endif %} tasks</h1>
+  {% endif %} tasks
+  (<a href="{% url 'task_manager:project-member-assign-task' team_slug=project.working_team.slug project_slug=project.slug user_slug=object.username %}">Assign task</a>)
+</h1>
 {{ object.position.name }}
 
 <h2>Assigned tasks</h2>
