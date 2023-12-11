@@ -120,7 +120,11 @@ class TaskForm(forms.ModelForm):
         queryset=get_user_model().objects.select_related("position"),
         widget=ModelSelect2MultipleWidget(
             model=get_user_model(),
-            search_fields=["first_name__icontains", "last_name__icontains", "position__name__icontains"],
+            search_fields=[
+                "first_name__icontains",
+                "last_name__icontains",
+                "position__name__icontains"
+            ],
             attrs={
                 "data-placeholder": "Choose assignees"
             },
