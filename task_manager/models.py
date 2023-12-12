@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.utils.text import slugify
 from taggit.managers import TaggableManager
 
+from task_manager.signals import task_completed, task_review_requested
+
 
 class Position(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -191,6 +193,14 @@ class Task(models.Model):
                 "task_id": self.id
             }
         )
+
+    def request_review(self):
+        task_review_requested.send(sender=Task, instance=self)
+
+    def mark_as_completed(self):
+        self.is_completed = True
+        self.save()
+        task_completed.send(sender=Task, instance=self)
 
     def __str__(self):
         return self.name
