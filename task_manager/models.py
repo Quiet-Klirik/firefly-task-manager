@@ -234,6 +234,10 @@ class Notification(models.Model):
     class Meta:
         ordering = ["-sent_at"]
 
+    def mark_as_read(self):
+        self.is_read = True
+        self.save()
+
     @property
     def message_text(self) -> str:
         return self.notification_type.message_template.format(task=self.task)
