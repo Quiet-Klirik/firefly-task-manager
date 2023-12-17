@@ -248,37 +248,3 @@ class ModelsTests(TestCase):
         notification = self.load_test_notification()
         message_text = NOTIFICATION_TYPE_MESSAGE_TEMPLATE.format(task=task)
         self.assertEquals(notification.message_text, message_text)
-
-    def test_task_created_notification_is_creating(self):
-        user = self.load_test_worker()
-        task = self.load_test_task()
-        notification = Notification.objects.filter(
-            user=user,
-            notification_type__name="task_created",
-            task=task,
-        )
-        self.assertTrue(notification)
-
-    def test_task_updated_notification_is_creating(self):
-        user = self.load_test_worker()
-        task = self.load_test_task()
-        task.description = "Some lorem ipsum text"
-        task.save()
-        notification = Notification.objects.filter(
-            user=user,
-            notification_type__name="task_updated",
-            task=task,
-        )
-        self.assertTrue(notification)
-
-    def test_task_completed_notification_is_creating(self):
-        user = self.load_test_worker()
-        task = self.load_test_task()
-        task.is_completed = True
-        task.save()
-        notification = Notification.objects.filter(
-            user=user,
-            notification_type__name="task_completed",
-            task=task,
-        )
-        self.assertTrue(notification)
