@@ -415,3 +415,55 @@ class TaskDeleteView(TaskRequesterLoginRequiredMixin, generic.DeleteView):
                 "user_slug": user_slug,
             }
         )
+
+
+class TaskNotificationSendAbstractView(
+    LoginRequiredMixin,
+    generic.View
+):
+    object: Task = None
+    success_url = None
+
+    def get_object(self, queryset=None):
+        if not self.object:
+            task_id = self.kwargs.get("task_id")
+            self.object = Task.objects.select_related(
+                "project__working_team", "requester"
+            ).prefetch_related(
+                "assignees"
+            ).get(id=task_id)
+        return self.object
+
+    def get_success_url(self) -> str:
+        if not self.success_url:
+            return self.get_object().get_absolute_url()
+        return self.success_url
+
+    @abstractmethod
+    def get(self, request, **kwargs):
+        # implement some actions here
+        return redirect(self.get_success_url())
+
+
+class TaskReviewRequestView(TaskNotificationSendAbstractView):
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if self.request.user not in self.get_object().assignees.all():
+            return self.handle_no_permission()
+        return response
+
+    def get(self, request, *args, **kwargs):
+        self.get_object().request_review()
+        return redirect(self.get_success_url())
+
+
+class TaskMarkAsCompletedView(TaskNotificationSendAbstractView):
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if self.request.user != self.get_object().requester:
+            return self.handle_no_permission()
+        return response
+
+    def get(self, request, *args, **kwargs):
+        self.get_object().mark_as_completed()
+        return redirect(self.get_success_url())

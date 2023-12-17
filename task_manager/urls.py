@@ -13,7 +13,7 @@ from task_manager.views import (
     ProjectLandingView,
     ProjectMemberTasksView, ProjectUpdateView, ProjectDeleteView,
     TaskCreateView, TaskDetailView, TaskAssignView, TaskUpdateView,
-    TaskDeleteView
+    TaskDeleteView, TaskReviewRequestView, TaskMarkAsCompletedView
 )
 
 urlpatterns = [
@@ -84,6 +84,18 @@ urlpatterns = [
         "<str:team_slug>/<str:project_slug>/task/<int:task_id>/delete/",
         TaskDeleteView.as_view(),
         name="task-delete"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/"
+        "request-review/",
+        TaskReviewRequestView.as_view(),
+        name="task-request-review"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/"
+        "mark-as-completed/",
+        TaskMarkAsCompletedView.as_view(),
+        name="task-mark-as-completed"
     ),
     path(
         "<str:team_slug>/<str:project_slug>/<str:user_slug>/",
