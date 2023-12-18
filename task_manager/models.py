@@ -156,6 +156,7 @@ class Task(models.Model):
         LOW = 2, "Low"
         OPTIONAL = 1, "Optional"
         UNKNOWN = 0, "Unknown"
+    # TODO: remove unique parameter
     name = models.CharField(max_length=255, unique=True)
     tags = TaggableManager(related_name="tasks", blank=True)
     description = models.TextField(blank=True)
@@ -179,7 +180,7 @@ class Task(models.Model):
     )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["-is_completed", "-priority", "name"]
 
     def get_priority_display(self):
         return self.Priority(self.priority).label

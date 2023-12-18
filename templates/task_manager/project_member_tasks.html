@@ -12,16 +12,16 @@
 
 <h2>Assigned tasks</h2>
 <ul>
-  {% for task in assigned_tasks %}
+  {% for task in assigned_tasks_page.object_list %}
   	<li><a href="{% url 'task_manager:task-detail' team_slug=project.working_team.slug project_slug=project.slug task_id=task.id %}">{{ task }}</a></li>
   {% empty %}
     No tasks
   {% endfor %}
 </ul>
-
+{% include "includes/task_paginations/assigned_tasks_pagination.html" with page_obj=assigned_tasks_page paginator=assigned_tasks_page.paginator %}
 <h2>Requested tasks</h2>
 <ul>
-  {% for task in requested_tasks %}
+  {% for task in requested_tasks_page.object_list %}
   	<li><a href="{% url 'task_manager:task-detail' team_slug=project.working_team.slug project_slug=project.slug task_id=task.id %}">{{ task }}</a></li>
   {% empty %}
     No tasks
@@ -30,3 +30,5 @@
   	<li><a href="{% url 'task_manager:task-create' team_slug=project.working_team.slug project_slug=project.slug%}">+</a></li>
   {% endif %}
 </ul>
+{% include "includes/task_paginations/requested_tasks_pagination.html" with page_obj=requested_tasks_page paginator=requested_tasks_page.paginator %}
+

@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import generic
@@ -238,6 +239,7 @@ class ProjectMemberTasksView(
     slug_field = "username"
     slug_url_kwarg = "user_slug"
     template_name = "task_manager/project_member_tasks.html"
+    tasks_per_page = 12
     project = None
 
     def get_project(self) -> Project:
@@ -259,17 +261,34 @@ class ProjectMemberTasksView(
             username=user_username
         )
 
+    def get_tasks_paginator(self, queryset, page: int = 1):
+        paginator = Paginator(queryset, self.tasks_per_page)
+        try:
+            paginator_page = paginator.page(page)
+        except PageNotAnInteger:
+            paginator_page = paginator.page(1)
+        except EmptyPage:
+            paginator_page = paginator.page(paginator.num_pages)
+
+        return paginator_page
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         project = self.get_project()
         member = self.get_object()
+        requested_tasks = member.requested_tasks.filter(project=project)
+        assigned_tasks = member.assigned_tasks.filter(project=project)
+        rt_page = self.request.GET.get("rt_page")
+        at_page = self.request.GET.get("at_page")
+        requested_tasks_page = self.get_tasks_paginator(
+            requested_tasks, rt_page
+        )
+        assigned_tasks_page = self.get_tasks_paginator(
+            assigned_tasks, at_page
+        )
         context["project"] = project
-        context["requested_tasks"] = member.requested_tasks.filter(
-            project=project
-        )
-        context["assigned_tasks"] = member.assigned_tasks.filter(
-            project=project
-        )
+        context["requested_tasks_page"] = requested_tasks_page
+        context["assigned_tasks_page"] = assigned_tasks_page
         return context
 
 
