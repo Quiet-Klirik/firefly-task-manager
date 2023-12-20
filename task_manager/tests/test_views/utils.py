@@ -24,3 +24,16 @@ def assert_url_access(
     else:
         self.assertNotEquals(response.status_code, status_code)
     return response
+
+
+def assert_queryset_in_context(
+        self: TestCase,
+        context_name,
+        queryset,
+        context,
+):
+    self.assertIn(context_name, context)
+    self.assertEquals(
+        list(context[context_name]),
+        list(queryset)
+    )

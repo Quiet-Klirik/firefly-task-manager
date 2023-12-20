@@ -46,11 +46,8 @@ class PrivateUserTests(TestCase):
         )
         self.client.force_login(self.user)
 
-    def assert_retrieve_user_related_view(self, url_name: str) -> None:
-        assert_url_access(self, url_name, slug=self.user.username)
-
     def test_retrieve_user_profile_page(self):
-        self.assert_retrieve_user_related_view(USER_PROFILE_URL_NAME)
+        assert_url_access(self, USER_PROFILE_URL_NAME, slug=self.user.username)
 
     def test_redirect_user_profile_redirect_url(self):
         response = self.client.get(USER_PROFILE_REDIRECT_URL)

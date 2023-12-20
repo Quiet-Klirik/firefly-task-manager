@@ -236,6 +236,8 @@ class Notification(models.Model):
         ordering = ["-sent_at"]
 
     def mark_as_read(self):
+        if self.is_read:
+            return
         self.is_read = True
         self.save()
 

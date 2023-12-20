@@ -9,7 +9,7 @@ from django.views import generic
 
 from task_manager.forms import UserRegistrationForm, TeamForm, ProjectForm, \
     TaskForm, TaskForOneAssigneeForm
-from task_manager.models import Team, Project, Worker, Task
+from task_manager.models import Team, Project, Worker, Task, Notification
 
 
 class HomePageView(generic.TemplateView):
@@ -23,6 +23,21 @@ class HomePageView(generic.TemplateView):
         return context
 
 
+class NotificationContextMixin:
+    def get_notifications(self):
+        return self.request.user.notifications.select_related(
+            "task__project__working_team",
+            "task__requester"
+        ).filter(is_read=False)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            notifications = self.get_notifications().all()
+            context["notifications"] = notifications
+        return context
+
+
 class UserRegisterView(generic.CreateView):
     model = get_user_model()
     form_class = UserRegistrationForm
@@ -30,19 +45,23 @@ class UserRegisterView(generic.CreateView):
     success_url = reverse_lazy("task_manager:index")
 
 
-class UserProfileDetailView(LoginRequiredMixin, generic.DetailView):
+class UserProfileDetailView(
+    LoginRequiredMixin,
+    NotificationContextMixin,
+    generic.DetailView
+):
     model = get_user_model()
     queryset = get_user_model().objects.select_related("position")
     slug_field = "username"
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         if "slug" not in kwargs:
             url = reverse_lazy(
                 "profile",
                 kwargs={"slug": request.user.username}
             )
             return redirect(url)
-        return super().get(self, request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class UserProfileEditView(LoginRequiredMixin, generic.UpdateView):
@@ -68,7 +87,11 @@ class UserDeleteView(LoginRequiredMixin, generic.DeleteView):
         return self.request.user
 
 
-class TeamListView(LoginRequiredMixin, generic.TemplateView):
+class TeamListView(
+    LoginRequiredMixin,
+    NotificationContextMixin,
+    generic.TemplateView
+):
     model = Team
     template_name = "task_manager/team_list.html"
 
@@ -89,16 +112,30 @@ class TeamCreateView(LoginRequiredMixin, generic.CreateView):
         return super().form_valid(form)
 
 
-class TeamDetailView(LoginRequiredMixin, generic.DetailView):
+class TeamDetailView(
+    LoginRequiredMixin,
+    NotificationContextMixin,
+    generic.DetailView
+):
     model = Team
     slug_url_kwarg = "team_slug"
+    object = None
+
+    def get_notifications(self):
+        notifications = super().get_notifications()
+        notifications = notifications.filter(
+            task__project__working_team_id=self.get_object().id
+        )
+        return notifications
 
     def get_object(self, queryset=None):
-        return self.model.objects.select_related(
-            "founder"
-        ).prefetch_related(
-            "members", "projects"
-        ).get(slug=self.kwargs.get("team_slug"))
+        if not self.object:
+            self.object = self.model.objects.select_related(
+                "founder"
+            ).prefetch_related(
+                "members", "projects"
+            ).get(slug=self.kwargs.get("team_slug"))
+        return self.object
 
 
 class FounderLoginRequiredMixin(LoginRequiredMixin):
@@ -218,10 +255,18 @@ class ProjectDetailView(generic.DetailView):
         return self.queryset.get(slug=project_slug)
 
 
-class ProjectMembersView(MemberOrFounderLoginRequiredMixin, ProjectDetailView):
-    queryset = Project.objects.select_related(
-        "working_team__founder"
-    ).prefetch_related("working_team__members")
+class ProjectMembersView(
+    MemberOrFounderLoginRequiredMixin,
+    NotificationContextMixin,
+    ProjectDetailView
+):
+
+    def get_notifications(self):
+        notifications = super().get_notifications()
+        notifications = notifications.filter(
+            task__project_id=self.get_object().id
+        )
+        return notifications
 
     def get_team(self) -> Team:
         return self.get_object().working_team
@@ -233,6 +278,7 @@ class ProjectLandingView(ProjectDetailView):
 
 class ProjectMemberTasksView(
     MemberOrFounderLoginRequiredMixin,
+    NotificationContextMixin,
     generic.DetailView
 ):
     model = get_user_model()
@@ -241,6 +287,13 @@ class ProjectMemberTasksView(
     template_name = "task_manager/project_member_tasks.html"
     tasks_per_page = 12
     project = None
+
+    def get_notifications(self):
+        notifications = super().get_notifications()
+        notifications = notifications.filter(
+            task__project_id=self.get_project().id
+        )
+        return notifications
 
     def get_project(self) -> Project:
         if not self.project:
@@ -367,8 +420,19 @@ class TaskAssignView(TaskCreateView):
         return response
 
 
-class TaskDetailView(MemberOrFounderLoginRequiredMixin, generic.DetailView):
+class TaskDetailView(
+    MemberOrFounderLoginRequiredMixin,
+    NotificationContextMixin,
+    generic.DetailView
+):
     model = Task
+
+    def get_notifications(self):
+        notifications = super().get_notifications()
+        notifications = notifications.filter(
+            task__project_id=self.get_object().project.id
+        )
+        return notifications
 
     def get_object(self, queryset=None):
         task_id = self.kwargs.get("task_id")
@@ -459,7 +523,7 @@ class TaskNotificationSendAbstractView(
         return self.success_url
 
     @abstractmethod
-    def get(self, request, **kwargs):
+    def get(self, request, *args, **kwargs):
         # implement some actions here
         return redirect(self.get_success_url())
 
@@ -473,7 +537,7 @@ class TaskReviewRequestView(TaskNotificationSendAbstractView):
 
     def get(self, request, *args, **kwargs):
         self.get_object().request_review()
-        return redirect(self.get_success_url())
+        return super().get(request, *args, **kwargs)
 
 
 class TaskMarkAsCompletedView(TaskNotificationSendAbstractView):
@@ -485,4 +549,28 @@ class TaskMarkAsCompletedView(TaskNotificationSendAbstractView):
 
     def get(self, request, *args, **kwargs):
         self.get_object().mark_as_completed()
-        return redirect(self.get_success_url())
+        return super().get(request, *args, **kwargs)
+
+
+class NotificationRedirectView(LoginRequiredMixin, generic.View):
+    object = None
+
+    def get_object(self):
+        if not self.object:
+            notification_id = self.kwargs.get("id")
+            self.object = Notification.objects.select_related(
+                "task__project__working_team"
+            ).get(id=notification_id)
+        return self.object
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        notification = self.get_object()
+        if self.request.user.id != notification.user_id:
+            return self.handle_no_permission()
+        return response
+
+    def get(self, request, *args, **kwargs):
+        notification = self.get_object()
+        notification.mark_as_read()
+        return redirect(notification.task.get_absolute_url())

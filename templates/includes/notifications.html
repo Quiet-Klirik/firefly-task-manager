@@ -1,0 +1,14 @@
+<h4>Notifications</h4>
+<ul>
+  {% for notification in notifications %}
+  	<li>
+      {{ notification.task.project.working_team }} / {{ notification.task.project }}<br>
+      <a href="{% url 'task_manager:notification-redirect' id=notification.id %}">
+        {% if not notification.is_read %}◉ {% endif %}
+        {{ notification.message_text }}
+      </a>
+    </li>
+  {% empty %}
+    You have no notifications
+  {% endfor %}
+</ul>

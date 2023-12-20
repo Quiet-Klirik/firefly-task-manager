@@ -16,4 +16,4 @@ requester: <a href="{% url 'profile' slug=object.requester.username %}">{{ objec
   Description:<br>
   {{ object.description }}
 </p>
-
+{% include "includes/notifications.html" %}

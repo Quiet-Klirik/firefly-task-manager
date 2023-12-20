@@ -11,13 +11,26 @@ from task_manager.views import (
     ProjectCreateView,
     ProjectMembersView,
     ProjectLandingView,
-    ProjectMemberTasksView, ProjectUpdateView, ProjectDeleteView,
-    TaskCreateView, TaskDetailView, TaskAssignView, TaskUpdateView,
-    TaskDeleteView, TaskReviewRequestView, TaskMarkAsCompletedView
+    ProjectMemberTasksView,
+    ProjectUpdateView,
+    ProjectDeleteView,
+    TaskCreateView,
+    TaskDetailView,
+    TaskAssignView,
+    TaskUpdateView,
+    TaskDeleteView,
+    TaskReviewRequestView,
+    TaskMarkAsCompletedView,
+    NotificationRedirectView
 )
 
 urlpatterns = [
     path("", HomePageView.as_view(), name="index"),
+    path(
+        "notification_redirect/<int:id>/",
+        NotificationRedirectView.as_view(),
+        name="notification-redirect"
+    ),
     path("teams/", TeamListView.as_view(), name="team-list"),
     path("teams/create/", TeamCreateView.as_view(), name="team-create"),
     path(
