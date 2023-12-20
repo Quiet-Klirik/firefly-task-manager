@@ -1,0 +1,23 @@
+<form method="get" action="">
+  {{ team_filter_form.as_p }}
+  <input type="submit" value="Filter by team">
+</form>
+{% if team_filter %}
+  <form method="get" action="">
+    <input type="hidden" name="team" value="{{ team_filter }}">
+    {{ project_filter_form.as_p }}
+    <input type="submit" value="Filter by project">
+  </form>
+{% endif %}
+{% for notification in notification_list %}
+  <li>
+    {{ notification.task.project.working_team }} / {{ notification.task.project }}<br>
+    <a href="{% url 'task_manager:notification-redirect' id=notification.id %}">
+      {% if not notification.is_read %}◉ {% endif %}
+      {{ notification.message_text }}
+    </a>
+  </li>
+{% empty %}
+  No notifications
+{% endfor %}
+{% include 'includes/pagination.html' %}

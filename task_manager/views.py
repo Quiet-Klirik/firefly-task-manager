@@ -7,11 +7,21 @@ from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import generic
 
-from task_manager.forms import UserRegistrationForm, TeamForm, ProjectForm, \
-    TaskForm, TaskForOneAssigneeForm
-from task_manager.mixins import FounderLoginRequiredMixin, \
-    MemberOrFounderLoginRequiredMixin, TaskRequesterLoginRequiredMixin, \
+from task_manager.forms import (
+    UserRegistrationForm,
+    TeamForm,
+    ProjectForm,
+    TaskForm,
+    TaskForOneAssigneeForm,
+    NotificationFilterByTeamForm,
+    NotificationFilterByProjectForm
+)
+from task_manager.mixins import (
+    FounderLoginRequiredMixin,
+    MemberOrFounderLoginRequiredMixin,
+    TaskRequesterLoginRequiredMixin,
     NotificationContextMixin
+)
 from task_manager.models import Team, Project, Worker, Task, Notification
 
 
@@ -519,3 +529,40 @@ class NotificationRedirectView(LoginRequiredMixin, generic.View):
         notification = self.get_object()
         notification.mark_as_read()
         return redirect(notification.task.get_absolute_url())
+
+
+class NotificationListView(LoginRequiredMixin, generic.ListView):
+    model = Notification
+    paginate_by = 20
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        team_id = self.request.GET.get("team")
+        context["team_filter"] = team_id
+        context["team_filter_form"] = NotificationFilterByTeamForm(
+            initial={
+                "user_id": self.request.user.id,
+                "team": team_id,
+            }
+        )
+        if team_id:
+            project_id = self.request.GET.get("project")
+            context["project_filter_form"] = NotificationFilterByProjectForm(
+                initial={
+                    "team_id": team_id,
+                    "project": project_id,
+                }
+            )
+        return context
+
+    def get_queryset(self):
+        queryset = self.request.user.notifications.select_related(
+            "task__project__working_team", "task__requester"
+        )
+        team_id = self.request.GET.get("team")
+        if team_id:
+            queryset = queryset.filter(task__project__working_team_id=team_id)
+        project_id = self.request.GET.get("project")
+        if project_id:
+            queryset = queryset.filter(task__project_id=project_id)
+        return queryset

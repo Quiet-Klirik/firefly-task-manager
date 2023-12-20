@@ -8,6 +8,7 @@ def assert_url_access(
         url_name: str,
         status_code: int = 200,
         must_equals: bool = True,
+        data: dict = None,
         **kwargs
 ):
     """
@@ -18,7 +19,7 @@ def assert_url_access(
         url = url_name
     else:
         url = reverse(url_name, kwargs=kwargs)
-    response = self.client.get(url)
+    response = self.client.get(url, data=data)
     if must_equals:
         self.assertEquals(response.status_code, status_code)
     else:

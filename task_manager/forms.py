@@ -155,3 +155,35 @@ class TaskForOneAssigneeForm(TaskForm):
         widget=forms.HiddenInput,
         required=False
     )
+
+
+class NotificationFilterByTeamForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        user_id = kwargs["initial"].pop("user_id", None)
+        super().__init__(*args, **kwargs)
+        if user_id:
+            team_queryset = self.fields["team"].queryset
+            self.fields["team"].queryset = team_queryset.filter(
+                members__id=user_id,
+            )
+
+    team = forms.ModelChoiceField(
+        queryset=Team.objects.all(),
+        required=False,
+    )
+
+
+class NotificationFilterByProjectForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        team_id = kwargs["initial"].pop("team_id", None)
+        super().__init__(*args, **kwargs)
+        if team_id:
+            project_queryset = self.fields["project"].queryset
+            self.fields["project"].queryset = project_queryset.filter(
+                working_team__id=team_id,
+            )
+
+    project = forms.ModelChoiceField(
+        queryset=Project.objects.select_related("working_team"),
+        required=False,
+    )

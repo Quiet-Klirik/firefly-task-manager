@@ -21,7 +21,7 @@ from task_manager.views import (
     TaskDeleteView,
     TaskReviewRequestView,
     TaskMarkAsCompletedView,
-    NotificationRedirectView
+    NotificationRedirectView, NotificationListView
 )
 
 urlpatterns = [
@@ -33,6 +33,11 @@ urlpatterns = [
     ),
     path("teams/", TeamListView.as_view(), name="team-list"),
     path("teams/create/", TeamCreateView.as_view(), name="team-create"),
+    path(
+        "notifications/",
+        NotificationListView.as_view(),
+        name="notification-list"
+    ),
     path(
         "<str:team_slug>/",
         TeamDetailView.as_view(),

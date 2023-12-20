@@ -21,6 +21,7 @@ TEAM_DETAIL_URL_NAME = "task_manager:team-detail"
 PROJECT_DETAIL_URL_NAME = "task_manager:project-detail"
 PROJECT_MEMBER_TASKS_URL_NAME = "task_manager:project-member-tasks"
 TASK_DETAIL_URL_NAME = "task_manager:task-detail"
+NOTIFICATION_LIST_URL = reverse("task_manager:notification-list")
 
 
 def sample_team(name: str, founder):
@@ -185,3 +186,67 @@ class ViewsNotificationsContextTests(TestCase):
         self.assert_correct_project_notifications((
             (response, self.project1),
         ))
+
+    def test_notification_list_login_required(self):
+        self.client.logout()
+        assert_url_access(
+            self,
+            NOTIFICATION_LIST_URL,
+            200,
+            False,
+        )
+
+    def test_notification_list_page_correct_notification_list_context(self):
+        response = assert_url_access(
+            self,
+            NOTIFICATION_LIST_URL,
+        )
+        notification_list = self.user.notifications.all()
+        assert_queryset_in_context(
+            self, "notification_list", notification_list, response.context,
+        )
+
+    def test_notification_list_filter_by_team(self):
+        response = assert_url_access(
+            self,
+            NOTIFICATION_LIST_URL,
+            data={"team": self.team1.id}
+        )
+        notification_list = self.user.notifications.filter(
+            task__project__working_team_id=self.team1.id,
+        )
+        assert_queryset_in_context(
+            self, "notification_list", notification_list, response.context,
+        )
+
+    def test_notification_list_filter_by_project(self):
+        response = assert_url_access(
+            self,
+            NOTIFICATION_LIST_URL,
+            data={
+                "team": self.team1.id,
+                "project": self.project1.id
+            }
+        )
+        notification_list = self.user.notifications.filter(
+            task__project_id=self.project1.id,
+        )
+        assert_queryset_in_context(
+            self, "notification_list", notification_list, response.context,
+        )
+
+    def test_notification_list_filter_with_wrong_project(self):
+        response = assert_url_access(
+            self,
+            NOTIFICATION_LIST_URL,
+            data={
+                "team": self.team1.id,
+                "project": self.project3.id
+            }
+        )
+        notification_list = self.user.notifications.filter(
+            task__project_id=None,
+        )
+        assert_queryset_in_context(
+            self, "notification_list", notification_list, response.context,
+        )
