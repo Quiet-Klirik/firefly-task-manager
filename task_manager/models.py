@@ -145,7 +145,7 @@ class Task(models.Model):
         LOW = 2, "Low"
         OPTIONAL = 1, "Optional"
         UNKNOWN = 0, "Unknown"
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     tags = TaggableManager(related_name="tasks", blank=True)
     description = models.TextField(blank=True)
     deadline = models.DateField()
