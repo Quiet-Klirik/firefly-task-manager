@@ -9,6 +9,9 @@ from django.views import generic
 
 from task_manager.forms import UserRegistrationForm, TeamForm, ProjectForm, \
     TaskForm, TaskForOneAssigneeForm
+from task_manager.mixins import FounderLoginRequiredMixin, \
+    MemberOrFounderLoginRequiredMixin, TaskRequesterLoginRequiredMixin, \
+    NotificationContextMixin
 from task_manager.models import Team, Project, Worker, Task, Notification
 
 
@@ -20,21 +23,6 @@ class HomePageView(generic.TemplateView):
         context["teams_count"] = Team.objects.count()
         context["projects_count"] = Project.objects.count()
         context["workers_count"] = Worker.objects.count()
-        return context
-
-
-class NotificationContextMixin:
-    def get_notifications(self):
-        return self.request.user.notifications.select_related(
-            "task__project__working_team",
-            "task__requester"
-        ).filter(is_read=False)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            notifications = self.get_notifications().all()
-            context["notifications"] = notifications
         return context
 
 
@@ -136,35 +124,6 @@ class TeamDetailView(
                 "members", "projects"
             ).get(slug=self.kwargs.get("team_slug"))
         return self.object
-
-
-class FounderLoginRequiredMixin(LoginRequiredMixin):
-    permission_denied_message = "Access denied"
-
-    @abstractmethod
-    def get_founder(self):
-        pass
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if request.user != self.get_founder():
-            return self.handle_no_permission()
-        return response
-
-
-class MemberOrFounderLoginRequiredMixin(LoginRequiredMixin):
-    @abstractmethod
-    def get_team(self) -> Team:
-        pass
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if (
-                request.user not in self.get_team().members.all()
-                and request.user != self.get_team().founder
-        ):
-            return self.handle_no_permission()
-        return response
 
 
 class TeamUpdateView(FounderLoginRequiredMixin, generic.UpdateView):
@@ -444,20 +403,6 @@ class TaskDetailView(
 
     def get_team(self) -> Team:
         return self.get_object().project.working_team
-
-
-class TaskRequesterLoginRequiredMixin(LoginRequiredMixin):
-    permission_denied_message = "Access denied"
-
-    @abstractmethod
-    def get_requester(self):
-        pass
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if request.method == "GET" and request.user != self.get_requester():
-            return self.handle_no_permission()
-        return response
 
 
 class TaskUpdateView(TaskRequesterLoginRequiredMixin, generic.UpdateView):
