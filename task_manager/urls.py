@@ -1,0 +1,129 @@
+from django.urls import path
+
+from task_manager.views import (
+    IndexView,
+    TeamListView,
+    TeamCreateView,
+    TeamDetailView,
+    TeamUpdateView,
+    TeamDeleteView,
+    TeamKickMemberView,
+    ProjectCreateView,
+    ProjectMembersView,
+    ProjectLandingView,
+    ProjectMemberTasksView,
+    ProjectUpdateView,
+    ProjectDeleteView,
+    TaskCreateView,
+    TaskDetailView,
+    TaskAssignView,
+    TaskUpdateView,
+    TaskDeleteView,
+    TaskReviewRequestView,
+    TaskMarkAsCompletedView,
+    NotificationRedirectView, NotificationListView
+)
+
+urlpatterns = [
+    path(
+        "notification_redirect/<int:id>/",
+        NotificationRedirectView.as_view(),
+        name="notification-redirect"
+    ),
+    path("teams/", TeamListView.as_view(), name="team-list"),
+    path("teams/create/", TeamCreateView.as_view(), name="team-create"),
+    path(
+        "notifications/",
+        NotificationListView.as_view(),
+        name="notification-list"
+    ),
+    path(
+        "<str:team_slug>/",
+        TeamDetailView.as_view(),
+        name="team-detail"
+    ),
+    path(
+        "<str:team_slug>/edit/",
+        TeamUpdateView.as_view(),
+        name="team-update"
+    ),
+    path(
+        "<str:team_slug>/delete/",
+        TeamDeleteView.as_view(),
+        name="team-delete"
+    ),
+    path(
+        "<str:team_slug>/kick/<str:member_username>/",
+        TeamKickMemberView.as_view(),
+        name="team-kick-member"
+    ),
+    path(
+        "<str:team_slug>/create-project/",
+        ProjectCreateView.as_view(),
+        name="project-create"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/",
+        ProjectMembersView.as_view(),
+        name="project-detail"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/landing/",
+        ProjectLandingView.as_view(),
+        name="project-landing"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/edit/",
+        ProjectUpdateView.as_view(),
+        name="project-update"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/delete/",
+        ProjectDeleteView.as_view(),
+        name="project-delete"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/create-task/",
+        TaskCreateView.as_view(),
+        name="task-create"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/",
+        TaskDetailView.as_view(),
+        name="task-detail"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/edit/",
+        TaskUpdateView.as_view(),
+        name="task-update"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/delete/",
+        TaskDeleteView.as_view(),
+        name="task-delete"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/"
+        "request-review/",
+        TaskReviewRequestView.as_view(),
+        name="task-request-review"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/task/<int:task_id>/"
+        "mark-as-completed/",
+        TaskMarkAsCompletedView.as_view(),
+        name="task-mark-as-completed"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/<str:user_slug>/",
+        ProjectMemberTasksView.as_view(),
+        name="project-member-tasks"
+    ),
+    path(
+        "<str:team_slug>/<str:project_slug>/<str:user_slug>/assign-task/",
+        TaskAssignView.as_view(),
+        name="project-member-assign-task"
+    )
+]
+
+app_name = "task_manager"

@@ -1,0 +1,5 @@
+{% extends "includes/pagination.html" %}
+{% load query_transform %}
+{% block previous_page_href %}?{% query_transform request at_page=page_obj.previous_page_number %}{% endblock %}
+{% block page_href %}?{% query_transform request at_page=page %}{% endblock %}
+{% block next_page_href %}?{% query_transform request at_page=page_obj.next_page_number %}{% endblock %}

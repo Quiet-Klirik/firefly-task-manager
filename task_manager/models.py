@@ -5,6 +5,8 @@ from django.urls import reverse
 from django.utils.text import slugify
 from taggit.managers import TaggableManager
 
+from task_manager.signals import task_completed, task_review_requested
+
 
 class Position(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -32,6 +34,9 @@ class Worker(AbstractUser):
 
     class Meta:
         ordering = ["position", "first_name", "last_name"]
+
+    def get_absolute_url(self):
+        return reverse("profile", kwargs={"slug": self.username})
 
     @classmethod
     def get_deleted_user(cls):
@@ -63,6 +68,12 @@ class Team(models.Model):
 
     class Meta:
         ordering = ["name"]
+
+    def get_absolute_url(self):
+        return reverse(
+            "task_manager:team-detail",
+            kwargs={"team_slug": self.slug}
+        )
 
     def save(
             self,
@@ -168,7 +179,7 @@ class Task(models.Model):
     )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["-is_completed", "-priority", "name"]
 
     def get_priority_display(self):
         return self.Priority(self.priority).label
@@ -182,6 +193,14 @@ class Task(models.Model):
                 "task_id": self.id
             }
         )
+
+    def request_review(self):
+        task_review_requested.send(sender=Task, instance=self)
+
+    def mark_as_completed(self):
+        self.is_completed = True
+        self.save()
+        task_completed.send(sender=Task, instance=self)
 
     def __str__(self):
         return self.name
@@ -214,6 +233,12 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ["-sent_at"]
+
+    def mark_as_read(self):
+        if self.is_read:
+            return
+        self.is_read = True
+        self.save()
 
     @property
     def message_text(self) -> str:

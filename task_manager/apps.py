@@ -7,3 +7,4 @@ class TaskManagerConfig(AppConfig):
 
     def ready(self):
         from . import signals
+        from . import handlers
