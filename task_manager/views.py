@@ -10,22 +10,27 @@ from django.views import generic
 from task_manager.forms import (
     UserRegistrationForm,
     TeamForm,
+    TeamUpdateForm,
     ProjectForm,
     TaskForm,
     TaskForOneAssigneeForm,
     NotificationFilterByTeamForm,
-    NotificationFilterByProjectForm
+    NotificationFilterByProjectForm,
 )
 from task_manager.mixins import (
     FounderLoginRequiredMixin,
     MemberOrFounderLoginRequiredMixin,
     TaskRequesterLoginRequiredMixin,
-    NotificationContextMixin
+    NotificationContextMixin,
+    TeamGetObjectMixin,
+    ViewGetProjectMixin,
+    ProjectGetObjectMixin,
+    TaskGetObjectMixin,
 )
 from task_manager.models import Team, Project, Worker, Task, Notification
 
 
-class HomePageView(generic.TemplateView):
+class IndexView(generic.TemplateView):
     template_name = "task_manager/index.html"
 
     def get_context_data(self, **kwargs):
@@ -53,7 +58,7 @@ class UserProfileDetailView(
     slug_field = "username"
 
     def dispatch(self, request, *args, **kwargs):
-        if "slug" not in kwargs:
+        if request.user.is_authenticated and "slug" not in kwargs:
             url = reverse_lazy(
                 "profile",
                 kwargs={"slug": request.user.username}
@@ -111,13 +116,12 @@ class TeamCreateView(LoginRequiredMixin, generic.CreateView):
 
 
 class TeamDetailView(
+    TeamGetObjectMixin,
     LoginRequiredMixin,
     NotificationContextMixin,
     generic.DetailView
 ):
     model = Team
-    slug_url_kwarg = "team_slug"
-    object = None
 
     def get_notifications(self):
         notifications = super().get_notifications()
@@ -126,26 +130,31 @@ class TeamDetailView(
         )
         return notifications
 
-    def get_object(self, queryset=None):
-        if not self.object:
-            self.object = self.model.objects.select_related(
-                "founder"
-            ).prefetch_related(
-                "members", "projects"
-            ).get(slug=self.kwargs.get("team_slug"))
-        return self.object
 
-
-class TeamUpdateView(FounderLoginRequiredMixin, generic.UpdateView):
+class TeamUpdateView(
+    TeamGetObjectMixin,
+    FounderLoginRequiredMixin,
+    generic.UpdateView
+):
     model = Team
-    form_class = TeamForm
-    slug_url_kwarg = "team_slug"
+    form_class = TeamUpdateForm
 
     def get_founder(self):
         return self.get_object().founder
 
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["members_queryset"] = (
+            self.get_object().members.select_related("position")
+        )
+        return initial
 
-class TeamDeleteView(FounderLoginRequiredMixin, generic.DeleteView):
+
+class TeamDeleteView(
+    TeamGetObjectMixin,
+    FounderLoginRequiredMixin,
+    generic.DeleteView
+):
     model = Team
     slug_url_kwarg = "team_slug"
     success_url = reverse_lazy("task_manager:team-list")
@@ -217,11 +226,14 @@ class ProjectDetailView(generic.DetailView):
     model = Project
     queryset = Project.objects.select_related(
         "working_team__founder"
-    ).prefetch_related("working_team__members")
+    ).prefetch_related("working_team__members__position")
+    object = None
 
     def get_object(self, queryset=None):
-        project_slug = self.kwargs.get("project_slug")
-        return self.queryset.get(slug=project_slug)
+        if not self.object:
+            project_slug = self.kwargs.get("project_slug")
+            self.object = self.queryset.get(slug=project_slug)
+        return self.object
 
 
 class ProjectMembersView(
@@ -246,6 +258,7 @@ class ProjectLandingView(ProjectDetailView):
 
 
 class ProjectMemberTasksView(
+    ViewGetProjectMixin,
     MemberOrFounderLoginRequiredMixin,
     NotificationContextMixin,
     generic.DetailView
@@ -255,7 +268,7 @@ class ProjectMemberTasksView(
     slug_url_kwarg = "user_slug"
     template_name = "task_manager/project_member_tasks.html"
     tasks_per_page = 12
-    project = None
+    object = None
 
     def get_notifications(self):
         notifications = super().get_notifications()
@@ -264,24 +277,19 @@ class ProjectMemberTasksView(
         )
         return notifications
 
-    def get_project(self) -> Project:
-        if not self.project:
-            project_slug = self.kwargs.get("project_slug")
-            project = Project.objects.select_related(
-                "working_team__founder"
-            ).prefetch_related("working_team__members").get(slug=project_slug)
-            self.project = project
-        return self.project
-
     def get_team(self) -> Team:
         return self.get_project().working_team
 
     def get_object(self, queryset=None):
-        user_username = self.kwargs.get("user_slug")
-        return get_object_or_404(
-            self.get_project().working_team.members.select_related("position"),
-            username=user_username
-        )
+        if not self.object:
+            user_username = self.kwargs.get("user_slug")
+            self.object = get_object_or_404(
+                self.get_project().working_team.members.select_related(
+                    "position"
+                ),
+                username=user_username
+            )
+        return self.object
 
     def get_tasks_paginator(self, queryset, page: int = 1):
         paginator = Paginator(queryset, self.tasks_per_page)
@@ -314,16 +322,13 @@ class ProjectMemberTasksView(
         return context
 
 
-class ProjectUpdateView(FounderLoginRequiredMixin, generic.UpdateView):
+class ProjectUpdateView(
+    ProjectGetObjectMixin,
+    FounderLoginRequiredMixin,
+    generic.UpdateView
+):
     model = Project
     form_class = ProjectForm
-
-    def get_object(self, queryset=None):
-        project_slug = self.kwargs.get("project_slug")
-        return get_object_or_404(
-            self.model.objects.select_related("working_team__founder"),
-            slug=project_slug
-        )
 
     def get_founder(self):
         return self.get_object().working_team.founder
@@ -333,15 +338,12 @@ class ProjectUpdateView(FounderLoginRequiredMixin, generic.UpdateView):
         return super().form_valid(form)
 
 
-class ProjectDeleteView(FounderLoginRequiredMixin, generic.DeleteView):
+class ProjectDeleteView(
+    ProjectGetObjectMixin,
+    FounderLoginRequiredMixin,
+    generic.DeleteView
+):
     model = Project
-
-    def get_object(self, queryset=None):
-        project_slug = self.kwargs.get("project_slug")
-        return get_object_or_404(
-            self.model.objects.select_related("working_team__founder"),
-            slug=project_slug
-        )
 
     def get_founder(self):
         return self.get_object().working_team.founder
@@ -353,19 +355,13 @@ class ProjectDeleteView(FounderLoginRequiredMixin, generic.DeleteView):
         )
 
 
-class TaskCreateView(MemberOrFounderLoginRequiredMixin, generic.CreateView):
+class TaskCreateView(
+    ViewGetProjectMixin,
+    MemberOrFounderLoginRequiredMixin,
+    generic.CreateView
+):
     model = Task
     form_class = TaskForm
-    project = None
-
-    def get_project(self) -> Project:
-        if not self.project:
-            project_slug = self.kwargs.get("project_slug")
-            project = Project.objects.select_related(
-                "working_team__founder"
-            ).prefetch_related("working_team__members").get(slug=project_slug)
-            self.project = project
-        return self.project
 
     def get_team(self) -> Team:
         return self.get_project().working_team
@@ -395,6 +391,7 @@ class TaskDetailView(
     generic.DetailView
 ):
     model = Task
+    object = None
 
     def get_notifications(self):
         notifications = super().get_notifications()
@@ -404,39 +401,37 @@ class TaskDetailView(
         return notifications
 
     def get_object(self, queryset=None):
-        task_id = self.kwargs.get("task_id")
-        return self.model.objects.select_related(
-            "project__working_team__founder", "task_type", "requester"
-        ).prefetch_related(
-            "project__working_team__members", "assignees"
-        ).get(id=task_id)
+        if not self.object:
+            task_id = self.kwargs.get("task_id")
+            self.object = self.model.objects.select_related(
+                "project__working_team__founder", "task_type", "requester"
+            ).prefetch_related(
+                "project__working_team__members", "assignees__position"
+            ).get(id=task_id)
+        return self.object
 
     def get_team(self) -> Team:
         return self.get_object().project.working_team
 
 
-class TaskUpdateView(TaskRequesterLoginRequiredMixin, generic.UpdateView):
+class TaskUpdateView(
+    TaskGetObjectMixin,
+    TaskRequesterLoginRequiredMixin,
+    generic.UpdateView
+):
     model = Task
     form_class = TaskForm
-
-    def get_object(self, queryset=None):
-        task_id = self.kwargs.get("task_id")
-        return self.model.objects.select_related(
-            "requester"
-        ).get(id=task_id)
 
     def get_requester(self):
         return self.get_object().requester
 
 
-class TaskDeleteView(TaskRequesterLoginRequiredMixin, generic.DeleteView):
+class TaskDeleteView(
+    TaskGetObjectMixin,
+    TaskRequesterLoginRequiredMixin,
+    generic.DeleteView
+):
     model = Task
-
-    def get_object(self, queryset=None):
-        task_id = self.kwargs.get("task_id")
-        return self.model.objects.select_related(
-            "requester"
-        ).get(id=task_id)
 
     def get_requester(self):
         return self.get_object().requester
@@ -557,7 +552,9 @@ class NotificationListView(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         queryset = self.request.user.notifications.select_related(
-            "task__project__working_team", "task__requester"
+            "notification_type",
+            "task__project__working_team",
+            "task__requester",
         )
         team_id = self.request.GET.get("team")
         if team_id:

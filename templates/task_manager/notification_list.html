@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 <form method="get" action="">
   {{ team_filter_form.as_p }}
   <input type="submit" value="Filter by team">
@@ -9,6 +11,7 @@
     <input type="submit" value="Filter by project">
   </form>
 {% endif %}
+<br>
 {% for notification in notification_list %}
   <li>
     {{ notification.task.project.working_team }} / {{ notification.task.project }}<br>
@@ -21,3 +24,4 @@
   No notifications
 {% endfor %}
 {% include 'includes/pagination.html' %}
+{% endblock content %}

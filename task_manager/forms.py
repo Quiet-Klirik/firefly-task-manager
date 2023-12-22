@@ -28,10 +28,35 @@ class TeamForm(ModelForm):
     class Meta:
         model = Team
         fields = "__all__"
-        widgets = {"members": forms.CheckboxSelectMultiple}
 
     founder = forms.ModelChoiceField(
         queryset=None, widget=forms.HiddenInput, required=False
+    )
+    members = forms.ModelMultipleChoiceField(
+        queryset=get_user_model().objects.select_related("position"),
+        widget=ModelSelect2MultipleWidget(
+            model=get_user_model(),
+            search_fields=[
+                "first_name__icontains",
+                "last_name__icontains",
+                "position__name__icontains"
+            ],
+            attrs={
+                "data-placeholder": "Choose members"
+            },
+        )
+    )
+
+
+class TeamUpdateForm(TeamForm):
+    def __init__(self, *args, **kwargs):
+        members_queryset = kwargs["initial"].pop("members_queryset", None)
+        super().__init__(*args, **kwargs)
+        self.fields["founder"].queryset = members_queryset
+
+    founder = forms.ModelChoiceField(
+        queryset=None,
+        required=False,
     )
 
 

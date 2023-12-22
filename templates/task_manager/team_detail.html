@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 {{ object.slug }}
 <h1>{{ object.name }}</h1>
 {% if user == object.founder %}
@@ -43,3 +45,4 @@
   {% endif %}
 </ul>
 {% include "includes/notifications.html" %}
+{% endblock content %}

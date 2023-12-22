@@ -1,2 +1,5 @@
-{{ object.username }}
-{% include "includes/notifications.html" %}
+{% extends "base.html" %}
+{% block content %}
+  {{ object.username }}
+  {% include "includes/notifications.html" %}
+{% endblock content %}

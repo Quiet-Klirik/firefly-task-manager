@@ -1,6 +1,9 @@
 from abc import abstractmethod
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
+
+from task_manager.models import Project
 
 
 class FounderLoginRequiredMixin(LoginRequiredMixin):
@@ -49,6 +52,7 @@ class TaskRequesterLoginRequiredMixin(LoginRequiredMixin):
 class NotificationContextMixin:
     def get_notifications(self):
         return self.request.user.notifications.select_related(
+            "notification_type",
             "task__project__working_team",
             "task__requester"
         ).filter(is_read=False)
@@ -59,3 +63,54 @@ class NotificationContextMixin:
             notifications = self.get_notifications().all()
             context["notifications"] = notifications
         return context
+
+
+class TeamGetObjectMixin:
+    object = None
+
+    def get_object(self, queryset=None):
+        if not self.object:
+            self.object = self.model.objects.select_related(
+                "founder"
+            ).prefetch_related(
+                "members", "projects"
+            ).get(slug=self.kwargs.get("team_slug"))
+        return self.object
+
+
+class ViewGetProjectMixin:
+    project = None
+
+    def get_project(self) -> Project:
+        if not self.project:
+            project_slug = self.kwargs.get("project_slug")
+            project = Project.objects.select_related(
+                "working_team__founder"
+            ).prefetch_related("working_team__members").get(slug=project_slug)
+            self.project = project
+        return self.project
+
+
+class ProjectGetObjectMixin:
+    object = None
+
+    def get_object(self, queryset=None):
+        if not self.object:
+            project_slug = self.kwargs.get("project_slug")
+            self.object = get_object_or_404(
+                self.model.objects.select_related("working_team__founder"),
+                slug=project_slug
+            )
+        return self.object
+
+
+class TaskGetObjectMixin:
+    object = None
+
+    def get_object(self, queryset=None):
+        if not self.object:
+            task_id = self.kwargs.get("task_id")
+            self.object = self.model.objects.select_related(
+                "requester"
+            ).get(id=task_id)
+        return self.object

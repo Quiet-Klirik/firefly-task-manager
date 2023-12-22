@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 <a href="{% url 'task_manager:project-landing' team_slug=object.working_team.slug project_slug=object.slug %}">Landing</a>
 <h1>{{ object.name }}</h1>
 {{ object.slug }}
@@ -19,3 +21,4 @@
   {% endfor %}
 </div>
 {% include "includes/notifications.html" %}
+{% endblock content %}

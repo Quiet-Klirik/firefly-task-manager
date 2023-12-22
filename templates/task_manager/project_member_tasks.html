@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 <h1>
   <a href="{% url 'task_manager:project-detail' team_slug=project.working_team.slug project_slug=project.slug %}">
     {{ project.name }}
@@ -32,3 +34,4 @@
 </ul>
 {% include "includes/task_paginations/requested_tasks_pagination.html" with page_obj=requested_tasks_page paginator=requested_tasks_page.paginator %}
 {% include "includes/notifications.html" %}
+{% endblock content %}

@@ -6,7 +6,7 @@ from task_manager.models import Team, Project, Worker
 from .utils import assert_url_access
 
 
-HOME_PAGE_URL = reverse("task_manager:index")
+HOME_PAGE_URL = reverse("index")
 
 
 class PublicHomePageTests(TestCase):

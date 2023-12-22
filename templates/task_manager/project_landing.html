@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 <h1>{{ object.name }}</h1>
 Founder: {{ object.working_team.founder }}<br>
 Working team: {{ object.working_team.name }}<br>
@@ -5,3 +7,4 @@ Workers: {% for member in object.working_team.members.all %}{{ member }}, {% emp
 <p>
   {{ object.description }}
 </p>
+{% endblock content %}

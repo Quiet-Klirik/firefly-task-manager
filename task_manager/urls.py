@@ -1,7 +1,7 @@
 from django.urls import path
 
 from task_manager.views import (
-    HomePageView,
+    IndexView,
     TeamListView,
     TeamCreateView,
     TeamDetailView,
@@ -25,7 +25,6 @@ from task_manager.views import (
 )
 
 urlpatterns = [
-    path("", HomePageView.as_view(), name="index"),
     path(
         "notification_redirect/<int:id>/",
         NotificationRedirectView.as_view(),

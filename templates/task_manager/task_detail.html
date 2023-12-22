@@ -1,4 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
 <h1><a href="{% url 'task_manager:project-detail' team_slug=object.project.working_team.slug project_slug=object.project.slug %}">{{ object.project }}</a> task - {{ object.name }} {% if object.is_completed %}✅{% endif %}</h1>
+{% if user == object.requester %}
+  <a href="{% url 'task_manager:task-update' team_slug=object.project.working_team.slug project_slug=object.project.slug task_id=object.id %}">Edit</a>
+  _____
+  <a href="{% url 'task_manager:task-delete' team_slug=object.project.working_team.slug project_slug=object.project.slug task_id=object.id %}">Delete</a>
+{% endif %}
 <p>
   {% if not task.is_completed and user == task.requester %}
     <br><a href="{% url 'task_manager:task-mark-as-completed' team_slug=task.project.working_team.slug project_slug=task.project.slug task_id=task.id %}">Mark as completed</a>
@@ -17,3 +24,4 @@ requester: <a href="{% url 'profile' slug=object.requester.username %}">{{ objec
   {{ object.description }}
 </p>
 {% include "includes/notifications.html" %}
+{% endblock content %}
