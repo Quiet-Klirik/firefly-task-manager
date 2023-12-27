@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
+from django.views.decorators.cache import cache_page
 
 from task_manager.views import (
     UserRegisterView,
@@ -26,7 +27,7 @@ from task_manager.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("-/", include("task_manager.urls", namespace="task_manager")),
-    path("", IndexView.as_view(), name="index"),
+    path("", cache_page(60**2 * 3)(IndexView.as_view()), name="index"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/register/", UserRegisterView.as_view(), name="register"),
     path(
