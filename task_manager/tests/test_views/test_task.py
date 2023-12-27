@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from task_manager.models import Team, Project, TaskType, Task
-from.utils import assert_url_access
+from .utils import assert_url_access
 
 TASK_CREATE_URL_NAME = "task_manager:task-create"
 TASK_ASSIGN_URL_NAME = "task_manager:project-member-assign-task"

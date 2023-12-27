@@ -139,7 +139,9 @@ class TaskForm(forms.ModelForm):
         queryset=Project.objects, widget=forms.HiddenInput, required=False
     )
     requester = forms.ModelChoiceField(
-        queryset=get_user_model().objects, widget=forms.HiddenInput, required=False
+        queryset=get_user_model().objects,
+        widget=forms.HiddenInput,
+        required=False
     )
     assignees = forms.ModelMultipleChoiceField(
         queryset=get_user_model().objects.select_related("position"),
