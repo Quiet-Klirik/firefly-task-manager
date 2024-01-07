@@ -1,14 +1,22 @@
-<h4>Notifications (<a href="{% url 'task_manager:notification-list' %}">See all</a>)</h4>
-<ul>
-  {% for notification in notifications %}
-  	<li>
-      {{ notification.task.project.working_team }} / {{ notification.task.project }}<br>
-      <a href="{% url 'task_manager:notification-redirect' id=notification.id %}">
-        {% if not notification.is_read %}◉ {% endif %}
+{% load static %}
+<li class="nav-item nav-icon dropdown">
+  <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    {% if notifications %}
+      <img src="{% static 'imgs/icons/notifications-active.svg' %}" alt="Notifications icon" height="30px">
+    {% else %}
+      <img src="{% static 'imgs/icons/notifications.svg' %}" alt="Notifications icon" height="30px">
+    {% endif %}
+  </a>
+  <ul class="dropdown-menu dropdown-menu-end notifications-menu">
+    <li class="fw-bold py-2 px-4">Notifications <a class="float-end" href="{% url 'task_manager:notification-list' %}">See all</a></li>
+    {% for notification in notifications %}
+      <li><a class="dropdown-item notifications-item text-wrap" href="{% url 'task_manager:notification-redirect' id=notification.id %}">
+        <hr class="hr-gradient">
+        <span class="text-secondary">{{ notification.task.project.working_team }} / {{ notification.task.project }}</span><br>
         {{ notification.message_text }}
-      </a>
-    </li>
-  {% empty %}
-    You have no notifications
-  {% endfor %}
-</ul>
+      </a></li>
+    {% empty %}
+      <li class="text-center py-2">You have no notifications</li>
+    {% endfor %}
+  </ul>
+</li>

@@ -1,11 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Firefly</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Empty page{% endblock %} • Firefly</title>
+  {% load static %}
+  <link rel="icon" href="{% static 'imgs/logo/logo_image.svg' %}">
+  {% include "includes/bootstrap_headers.html" %}
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
   {% block extra_headers %}{% endblock extra_headers %}
 </head>
 <body>
-  {% block content %}{% endblock content %}
+
+{% block navigation %}
+  {% include 'includes/navigation.html' %}
+{% endblock navigation %}
+
+  <main {% block content_properties %}class="main pt-5"{% endblock %}>
+    {% block content %}
+      <div class="text-center my-5">
+        <h1>Oops..</h1>
+        <p>This page is empty. There is no content here :(</p>
+      </div>
+    {% endblock content %}
+  </main>
+
+{% block footer %}
+  {% include 'includes/footer.html' %}
+{% endblock footer %}
+
 </body>
 </html>
