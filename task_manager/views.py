@@ -101,8 +101,8 @@ class TeamListView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        context["involved_teams"] = user.teams.all()
-        context["founded_teams"] = user.founded_teams.all()
+        context["involved_teams"] = user.teams.prefetch_related("projects").all()
+        context["founded_teams"] = user.founded_teams.prefetch_related("projects").all()
         return context
 
 
@@ -144,9 +144,10 @@ class TeamUpdateView(
 
     def get_initial(self):
         initial = super().get_initial()
+        print(Worker.objects.filter(id=self.get_founder().id))
         initial["members_queryset"] = (
-            self.get_object().members.select_related("position")
-        )
+            self.get_object().members.select_related("position") | Worker.objects.filter(id=self.get_founder().id)
+        ).distinct()
         return initial
 
 
