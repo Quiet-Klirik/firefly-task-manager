@@ -1,2 +1,3 @@
 {% extends "base_form_select2.html" %}
+{% block title %}Team {{ object|yesno:"Update,Create" }}{% endblock title %}
 {% block form_title %}<h1 class="text-center">Team {{ object|yesno:"Update,Create" }} Form</h1>{% endblock form_title %}
