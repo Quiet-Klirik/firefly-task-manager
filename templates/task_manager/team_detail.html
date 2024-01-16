@@ -1,48 +1,88 @@
 {% extends "base.html" %}
+{% block title %}{{ object.name }}{% endblock title %}
+
+{% load static %}
+{% block extra_headers %}
+  <link rel="stylesheet" href="{% static 'css/task_manager/team_detail.css' %}">
+{% endblock extra_headers %}
+
+{% block navbar_items %}
+  {% include "includes/notifications.html" %}
+{% endblock navbar_items %}
+
+{% block content_properties %}class="main"{% endblock %}
+
 {% block content %}
-{{ object.slug }}
-<h1>{{ object.name }}</h1>
-{% if user == object.founder %}
-  <a href="{% url 'task_manager:team-update' team_slug=object.slug %}">Edit</a>
-  _____
-  <a href="{% url 'task_manager:team-delete' team_slug=object.slug %}">Delete</a>
-  <br><br>
-{% endif %}
-<div>
-  Founder:
-  <a href="{% url 'profile' slug=object.founder.username %}">
-    {{ object.founder.first_name }} {{ object.founder.last_name }}
-  </a>
-</div>
-<div>
-  Members :
-  {% for member in object.members.all %}
-    <a href="{% url 'profile' slug=member.username %}">{{ member.first_name }} {{ member.last_name }}</a>
-    {% if user == object.founder %}
-      <a href="{% url 'task_manager:team-kick-member' team_slug=object.slug member_username=member.username %}">-</a>
+<header class="header">
+  <div class="header__container">
+    <div class="container py-5">
+      <div class="row">
+        <div class="col-6">
+          <h1>{{ object.name }}</h1>
+          {{ object.slug }}
+        </div>
+        <div class="col-6 text-end">
+          {% if user == object.founder %}
+            <a href="{% url 'task_manager:team-update' team_slug=object.slug %}" class="btn btn-outline-warning fs-5">✏️</a>
+            <a href="{% url 'task_manager:team-delete' team_slug=object.slug %}" class="btn btn btn-outline-danger fs-5">🗑️</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="py-4">
+        <div>
+          Founder :
+          <a href="{% url 'profile' slug=object.founder.username %}" class="btn btn-outline-primary p-0 px-2">
+            {{ object.founder.first_name }} {{ object.founder.last_name }}
+          </a>
+        </div>
+        <div class="pt-1">
+          <div class="d-block d-md-inline">Members :</div>
+          {% for member in object.members.all %}
+            <div class="btn-group pb-1">
+              <a href="{% url 'profile' slug=member.username %}" class="btn btn-outline-primary p-0 px-2">
+                {{ member.first_name }} {{ member.last_name }}
+              </a>
+              {% if user == object.founder %}
+                <a href="{% url 'task_manager:team-kick-member' team_slug=object.slug member_username=member.username %}" class="btn btn-outline-warning p-0 px-2" title="Kick from the team">🦵</a>
+              {% endif %}
+            </div>
+          {% empty %}
+            no members
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="container py-4">
+    <h2 class="text-center">Projects</h2>
+    {% if object.founder == user %}
+    <div class="text-center mb-4">
+      <a class="btn btn-outline-primary" href="{% url 'task_manager:project-create' team_slug=object.slug %}">Create new project</a>
+    </div>
     {% endif %}
-  {% empty %}
-    no members
-  {% endfor %}
+  <div class="row">
+    {% for project in object.projects.all %}
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card project-card mb-4">
+          <div class="card-body d-flex flex-column justify-content-between">
+            <h5 class="card-title text-center">{{ project.name }}</h5>
+            <div class="card-text limited-text text-center mb-2">{% if project.description %}{{ project.description }}{% else %}Has no description{% endif %}</div>
+            <div class="d-flex justify-content-around">
+              {% if user in object.members.all %}
+                <a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}" class="card-link btn btn-outline-primary py-1">Open</a>
+                <a href="{% url 'task_manager:project-member-tasks' team_slug=object.slug project_slug=project.slug user_slug=user.username %}" class="card-link btn btn-outline-primary py-1">My tasks</a>
+              {% else %}
+                <a href="{% url 'task_manager:project-landing' team_slug=object.slug project_slug=project.slug %}" class="card-link btn btn-outline-primary py-1">Open Landing</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <h4 class="text-center text-secondary my-5">This team has no projects yet</h3>
+    {% endfor %}
+  </div>
 </div>
-<h2>Projects:</h2>
-<ul>
-  {% for project in object.projects.all %}
-    <li>
-      {{ project.name }}
-      {% if user in object.members.all %}
-        (<a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}">Open</a>)
-      {% else %}
-        (<a href="{% url 'task_manager:project-landing' team_slug=object.slug project_slug=project.slug %}">Landing</a>)
-      {% endif %}
-      {% if user in object.members.all %}
-        <a href="{% url 'task_manager:project-member-tasks' team_slug=object.slug project_slug=project.slug user_slug=user.username %}">My tasks</a>
-      {% endif %}
-    </li>
-  {% endfor %}
-  {% if object.founder == user %}
-    <li><a href="{% url 'task_manager:project-create' team_slug=object.slug %}">+</a></li>
-  {% endif %}
-</ul>
-{% include "includes/notifications.html" %}
+
 {% endblock content %}

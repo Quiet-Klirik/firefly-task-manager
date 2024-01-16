@@ -66,7 +66,7 @@ class ProjectForm(ModelForm):
         fields = "__all__"
 
     working_team = forms.ModelChoiceField(
-        queryset=None, widget=forms.HiddenInput, required=False
+        queryset=Team.objects.all(), widget=forms.HiddenInput, required=False
     )
 
 
