@@ -73,6 +73,9 @@
                 <a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}" class="card-link btn btn-outline-primary py-1">Open</a>
                 <a href="{% url 'task_manager:project-member-tasks' team_slug=object.slug project_slug=project.slug user_slug=user.username %}" class="card-link btn btn-outline-primary py-1">My tasks</a>
               {% else %}
+                {% if user == object.founder %}
+                  <a href="{% url 'task_manager:project-detail' team_slug=object.slug project_slug=project.slug %}" class="card-link btn btn-outline-primary py-1">Open</a>
+                {% endif %}
                 <a href="{% url 'task_manager:project-landing' team_slug=object.slug project_slug=project.slug %}" class="card-link btn btn-outline-primary py-1">Open Landing</a>
               {% endif %}
             </div>
@@ -80,9 +83,8 @@
         </div>
       </div>
     {% empty %}
-      <h4 class="text-center text-secondary my-5">This team has no projects yet</h3>
+      <h4 class="text-center text-secondary my-5">This team has no projects yet</h4>
     {% endfor %}
   </div>
 </div>
-
 {% endblock content %}

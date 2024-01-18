@@ -1,24 +1,55 @@
 {% extends "base.html" %}
+{% block title %}{{ object.name }}{% endblock title %}
+
+{% load static %}
+{% block extra_headers %}
+  <link rel="stylesheet" href="{% static 'css/task_manager/project_detail.css' %}">
+{% endblock extra_headers %}
+
+{% block navbar_items %}
+  {% include "includes/notifications.html" %}
+{% endblock navbar_items %}
+
+{% block content_properties %}class="main"{% endblock %}
+
 {% block content %}
-<a href="{% url 'task_manager:project-landing' team_slug=object.working_team.slug project_slug=object.slug %}">Landing</a>
-<h1>{{ object.name }}</h1>
-{{ object.slug }}
-<br><br>
-{% if user == object.working_team.founder %}
-  <a href="{% url 'task_manager:project-update' team_slug=object.working_team.slug project_slug=object.slug %}">Edit</a>
-  _____
-  <a href="{% url 'task_manager:project-delete' team_slug=object.working_team.slug project_slug=object.slug %}">Delete</a>
-{% endif %}
-<h2>Members</h2>
-<div>
-  {% for member in object.working_team.members.all %}
-    <a href="{% url 'task_manager:project-member-tasks' team_slug=object.working_team.slug project_slug=object.slug user_slug=member.username %}">{{ member }}</a>,
-    {% if member == user %}
-    	(You)
-    {% endif %}
-  {% empty %}
-    No members
-  {% endfor %}
+<header class="header">
+  <div class="header__container">
+    <div class="container py-5">
+      <div class="row">
+        <div class="col-6">
+          <h1>{{ object.name }}</h1>
+          {{ object.slug }}
+        </div>
+        <div class="col-6 text-end">
+          {% if user == object.working_team.founder %}
+            <a href="{% url 'task_manager:project-update' team_slug=object.working_team.slug project_slug=object.slug %}" class="btn btn-outline-warning fs-5">✏️</a>
+            <a href="{% url 'task_manager:project-delete' team_slug=object.working_team.slug project_slug=object.slug %}" class="btn btn btn-outline-danger fs-5">🗑️</a>
+          {% endif %}
+        </div>
+      </div>
+      <a href="{% url 'task_manager:project-landing' team_slug=object.working_team.slug project_slug=object.slug %}" class="btn btn-outline-primary mt-5 fs-5">Landing</a>
+    </div>
+  </div>
+</header>
+<div class="container py-4">
+  <h2 class="text-center">Workers</h2>
+  <div class="list-group list-group-flush">
+    {% for member in object.working_team.members.all %}
+      <a href="{% url 'task_manager:project-member-tasks' team_slug=object.working_team.slug project_slug=object.slug user_slug=member.username %}" class="list-group-item list-group-item-action d-flex w-100 justify-content-between">
+        <div>
+          <h5>{{ member.position }}</h5>
+          <p>
+            {{ member.first_name }} {{ member.last_name }}
+          </p>
+        </div>
+        {% if member == user %}
+          <h2 class="align-self-center">You</h2>
+        {% endif %}
+      </a>
+    {% empty %}
+      <h4 class="text-center text-secondary my-5">This team has no projects yet</h4>
+    {% endfor %}
+  </div>
 </div>
-{% include "includes/notifications.html" %}
 {% endblock content %}
