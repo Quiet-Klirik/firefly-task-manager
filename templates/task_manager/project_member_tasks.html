@@ -1,37 +1,116 @@
 {% extends "base.html" %}
-{% block content %}
-<h1>
-  <a href="{% url 'task_manager:project-detail' team_slug=project.working_team.slug project_slug=project.slug %}">
-    {{ project.name }}
-  </a> - {% if object == user %}
-  	Your
-  {% else %}
-    {{ object.username }}
-  {% endif %} tasks
-  (<a href="{% url 'task_manager:project-member-assign-task' team_slug=project.working_team.slug project_slug=project.slug user_slug=object.username %}">Assign task</a>)
-</h1>
-{{ object.position.name }}
+{% block title %}{{ object.first_name }} {{ object.last_name }}'s Tasks [{{ project.name }}]{% endblock title %}
 
-<h2>Assigned tasks</h2>
-<ul>
-  {% for task in assigned_tasks_page.object_list %}
-  	<li><a href="{% url 'task_manager:task-detail' team_slug=project.working_team.slug project_slug=project.slug task_id=task.id %}">{{ task }}</a></li>
-  {% empty %}
-    No tasks
-  {% endfor %}
-</ul>
-{% include "includes/task_paginations/assigned_tasks_pagination.html" with page_obj=assigned_tasks_page paginator=assigned_tasks_page.paginator %}
-<h2>Requested tasks</h2>
-<ul>
-  {% for task in requested_tasks_page.object_list %}
-  	<li><a href="{% url 'task_manager:task-detail' team_slug=project.working_team.slug project_slug=project.slug task_id=task.id %}">{{ task }}</a></li>
-  {% empty %}
-    No tasks
-  {% endfor %}
-  {% if user == object %}
-  	<li><a href="{% url 'task_manager:task-create' team_slug=project.working_team.slug project_slug=project.slug%}">+</a></li>
-  {% endif %}
-</ul>
-{% include "includes/task_paginations/requested_tasks_pagination.html" with page_obj=requested_tasks_page paginator=requested_tasks_page.paginator %}
-{% include "includes/notifications.html" %}
+{% load static %}
+{% block extra_headers %}
+  <link rel="stylesheet" href="{% static 'css/task_manager/project_member_tasks.css' %}">
+{% endblock extra_headers %}
+
+{% block navbar_items %}
+  {% include "includes/notifications.html" %}
+{% endblock navbar_items %}
+
+{% block content_properties %}class="main"{% endblock %}
+
+{% block content %}
+<header class="header">
+  <div class="header__container">
+    <div class="container py-5">
+      <div class="text-secondary mb-2">
+        <a href="{{ project.working_team.get_absolute_url }}" class="link-secondary link-opacity-50-hover link-underline-opacity-50">{{ project.working_team.name }}</a> >
+        <a href="{{ project.get_absolute_url }}" class="link-secondary link-opacity-50-hover link-underline-opacity-50">{{ project.name }}</a> >
+        {{ object.first_name }} {{ object.last_name }}'s Tasks
+      </div>
+          <h1>
+            {{ project.name }} - <br class="d-sm-none">
+            {% if object == user %}
+              Your
+            {% else %}
+              {{ object.first_name }} {{ object.last_name }}'s
+            {% endif %}
+            Tasks
+          </h1>
+          <a href="{% url 'task_manager:project-member-assign-task' team_slug=project.working_team.slug project_slug=project.slug user_slug=object.username %}" class="btn btn-outline-primary fs-5">Assign task</a>
+          <div class="my-4">
+            <div>Username: <a href="{{ object.get_absolute_url }}">{{ object.username }}</a></div>
+            <div>Position: {{ object.position }}</div>
+          </div>
+    </div>
+  </div>
+</header>
+<nav class="mb-4">
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+    <button class="nav-link active rounded-0 w-50 fs-5" id="nav-assigned-tab" data-bs-toggle="tab" data-bs-target="#nav-assigned" type="button" role="tab" aria-controls="nav-assigned" aria-selected="true">Assigned tasks</button>
+    <button class="nav-link rounded-0 w-50 fs-5" id="nav-requested-tab" data-bs-toggle="tab" data-bs-target="#nav-requested" type="button" role="tab" aria-controls="nav-requested" aria-selected="false">Requested tasks</button>
+  </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-assigned" role="tabpanel" aria-labelledby="nav-assigned-tab" tabindex="0">
+    <div class="container">
+      <div class="row">
+        {% for task in assigned_tasks_page.object_list %}
+          <div class="col-12 col-sm-6 col-lg-4">
+            <a href="{{ task.get_absolute_url }}" class="card task-card border-2 {% if task.is_completed %}border-success{% else %}{% if task.deadline < task.deadline.today %}border-danger{% endif %}{% endif %} mb-4">
+              <div class="card-body d-flex flex-column justify-content-between">
+                <h5 class="card-title text-center">{{ task.name }}</h5>
+                <div class="text-secondary text-center">deadline: {{ task.deadline }}</div>
+                <div class="d-flex justify-content-between">
+                  <div class="task-type"><strong class="fs-5">[</strong> {{ task.task_type }} <strong class="fs-5">]</strong></div>
+                  <div class="priority priority-{{ task.get_priority_display.lower }}">{{ task.get_priority_display }}</div>
+                </div>
+                <div class="my-2">
+                  {% if task.tags.all %}Tags:{% endif %}
+                  {% for tag in task.tags.all %}
+                    <div class="task-tag d-inline">{{ tag.name }}</div>
+                  {% empty %}
+                    <div class="text-secondary text-center">Has no tags</div>
+                  {% endfor %}
+                </div>
+                <div class="card-text limited-text text-center">{% if task.description %}{{ task.description }}{% else %}Has no description{% endif %}</div>
+              </div>
+            </a>
+          </div>
+        {% empty %}
+          <h3 class="text-center mt-5">There is no tasks</h3>
+        {% endfor %}
+      </div>
+      {% include "includes/task_paginations/assigned_tasks_pagination.html" with page_obj=assigned_tasks_page paginator=assigned_tasks_page.paginator %}
+    </div>
+  </div>
+  <div class="tab-pane fade" id="nav-requested" role="tabpanel" aria-labelledby="nav-requested-tab" tabindex="0">
+    <div class="container">
+      {% if user == object %}
+        <div class="text-center">
+          <a href="{% url 'task_manager:task-create' team_slug=project.working_team.slug project_slug=project.slug%}" class="btn btn-outline-primary fs-5  mb-4">Request new task</a>
+        </div>
+      {% endif %}
+      <div class="row">
+        {% for task in requested_tasks_page.object_list %}
+          <div class="col-12 col-sm-6 col-lg-4">
+            <a href="{{ task.get_absolute_url }}" class="card task-card {% if task.is_completed %}border-success{% else %}{% if task.deadline < task.deadline.today %}border-danger{% endif %}{% endif %} mb-4">
+              <div class="card-body d-flex flex-column justify-content-between">
+                <h5 class="card-title text-center">{{ task.name }}</h5>
+                <div class="text-secondary text-center">deadline: {{ task.deadline }}</div>
+                <div class="d-flex justify-content-between">
+                  <div class="task-type"><strong class="fs-5">[</strong> {{ task.task_type }} <strong class="fs-5">]</strong></div>
+                  <div class="priority priority-{{ task.get_priority_display.lower }}">{{ task.get_priority_display }}</div>
+                </div>
+                <div class="my-2">
+                  {% if task.tags.all %}Tags:{% endif %}
+                  {% for tag in task.tags.all %}
+                    <div class="task-tag d-inline">{{ tag.name }}</div>
+                  {% empty %}
+                    <div class="text-secondary text-center">Has no tags</div>
+                  {% endfor %}
+                </div>
+                <div class="card-text limited-text text-center">{% if task.description %}{{ task.description }}{% else %}Has no description{% endif %}</div>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+      {% include "includes/task_paginations/requested_tasks_pagination.html" with page_obj=requested_tasks_page paginator=requested_tasks_page.paginator %}
+    </div>
+  </div>
+</div>
 {% endblock content %}

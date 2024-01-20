@@ -20,6 +20,14 @@ body {
 	text-align: justify!important;
 }
 
+.limited-text {
+	width:100%;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+}
+
 .hr-gradient {
 	border: none;
   height: 1px;

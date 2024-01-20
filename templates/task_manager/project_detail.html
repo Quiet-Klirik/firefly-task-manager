@@ -16,6 +16,9 @@
 <header class="header">
   <div class="header__container">
     <div class="container py-5">
+      <div class="text-secondary mb-2">
+        <a href="{{ object.working_team.get_absolute_url }}" class="link-secondary link-opacity-50-hover link-underline-opacity-50">{{ object.working_team.name }}</a> > {{ object.name }}
+      </div>
       <div class="row">
         <div class="col-6">
           <h1>{{ object.name }}</h1>

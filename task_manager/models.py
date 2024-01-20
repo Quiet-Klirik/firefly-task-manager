@@ -179,7 +179,7 @@ class Task(models.Model):
     )
 
     class Meta:
-        ordering = ["-is_completed", "-priority", "name"]
+        ordering = ["is_completed", "-priority", "name"]
 
     def get_priority_display(self):
         return self.Priority(self.priority).label
