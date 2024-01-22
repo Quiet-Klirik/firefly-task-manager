@@ -374,14 +374,28 @@ class TaskCreateView(
         initial["requester"] = self.request.user
         return initial
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = self.get_project()
+        return context
+
 
 class TaskAssignView(TaskCreateView):
     form_class = TaskForOneAssigneeForm
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
+    def get_assignee(self):
         user_username = self.kwargs.get("user_slug")
         user = get_user_model().objects.get(username=user_username)
+        return user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["assignee"] = self.get_assignee()
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = self.get_assignee()
         form.instance.assignees.add(user)
         return response
 
