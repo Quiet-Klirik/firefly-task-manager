@@ -35,10 +35,10 @@
             {{ object.founder.first_name }} {{ object.founder.last_name }}
           </a>
         </div>
-        <div class="pt-1">
+        <div class="mt-1">
           <div class="d-block d-md-inline">Members :</div>
           {% for member in object.members.all %}
-            <div class="btn-group pb-1">
+            <div class="btn-group mb-1">
               <a href="{% url 'profile' slug=member.username %}" class="btn btn-outline-primary p-0 px-2">
                 {{ member.first_name }} {{ member.last_name }}
               </a>
