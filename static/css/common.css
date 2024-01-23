@@ -77,6 +77,47 @@ a.navbar-brand {
 	min-height: calc(100vh - var(--nav-height) - var(--footer-height));
 }
 
+.priority {
+	border: 2px solid;
+	border-radius: 10px;
+	padding: 0px 10px;
+}
+
+.priority-unknown {
+	border-color: rgb(100, 100, 100);
+	background-color: rgba(100, 100, 100, 0.1);
+}
+
+.priority-optional {
+	border-color: rgb(60, 179, 113);
+	background-color: rgba(60, 179, 113, 0.1);
+}
+
+.priority-low {
+	border-color: rgb(255, 230, 0);
+	background-color: rgba(255, 230, 0, 0.1);
+}
+
+.priority-middle {
+	border-color: rgb(255, 165, 0);
+	background-color: rgba(255, 165, 0, 0.1);
+}
+
+.priority-high {
+	border-color: rgb(255, 100, 0);
+	background-color: rgba(255, 100, 0, 0.1);
+}
+
+.priority-urgent {
+	border-color: rgb(238, 130, 238);
+	background-color: rgba(238, 130, 238, 0.1);
+}
+
+.priority-critical {
+	border-color: rgb(255, 0, 0);
+	background-color: rgba(255, 0, 0, 0.1);
+}
+
 .footer {
 	height: var(--footer-height);
 }

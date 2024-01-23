@@ -61,12 +61,12 @@
                 <div class="my-2">
                   {% if task.tags.all %}Tags:{% endif %}
                   {% for tag in task.tags.all %}
-                    <div class="task-tag d-inline">{{ tag.name }}</div>
+                    <div class="btn btn-outline-secondary disabled p-0 px-2">{{ tag.name }}</div>
                   {% empty %}
                     <div class="text-secondary text-center">Has no tags</div>
                   {% endfor %}
                 </div>
-                <div class="card-text limited-text text-center">{% if task.description %}{{ task.description }}{% else %}Has no description{% endif %}</div>
+                <div class="card-text limited-text text-center text-secondary">{% if task.description %}{{ task.description }}{% else %}Has no description{% endif %}</div>
               </div>
             </a>
           </div>

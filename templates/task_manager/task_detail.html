@@ -1,27 +1,73 @@
 {% extends "base.html" %}
+{% block title %}Task - {{ object.name }}{% endblock title %}
+
+{% block navbar_items %}
+  {% include "includes/notifications.html" %}
+{% endblock navbar_items %}
+
 {% block content %}
-<h1><a href="{% url 'task_manager:project-detail' team_slug=object.project.working_team.slug project_slug=object.project.slug %}">{{ object.project }}</a> task - {{ object.name }} {% if object.is_completed %}✅{% endif %}</h1>
-{% if user == object.requester %}
-  <a href="{% url 'task_manager:task-update' team_slug=object.project.working_team.slug project_slug=object.project.slug task_id=object.id %}">Edit</a>
-  _____
-  <a href="{% url 'task_manager:task-delete' team_slug=object.project.working_team.slug project_slug=object.project.slug task_id=object.id %}">Delete</a>
-{% endif %}
-<p>
-  {% if not task.is_completed and user == task.requester %}
-    <br><a href="{% url 'task_manager:task-mark-as-completed' team_slug=task.project.working_team.slug project_slug=task.project.slug task_id=task.id %}">Mark as completed</a>
-  {% elif not task.is_completed and user in task.assignees.all %}
-    <a href="{% url 'task_manager:task-request-review' team_slug=task.project.working_team.slug project_slug=task.project.slug task_id=task.id %}">Request review</a>
-  {% endif %}
-</p>
-tags: {% for tag in object.tags.all %}{{ tag }}{% endfor %}<br>
-deadline: {{ object.deadline }}<br>
-priority: {{ object.get_priority_display }}<br>
-task_type: {{ object.task_type.name }}<br>
-assignees: {% for assignee in object.assignees.all %}<a href="{% url 'profile' slug=assignee.username %}">{{ assignee }}</a>, {% endfor %}<br>
-requester: <a href="{% url 'profile' slug=object.requester.username %}">{{ object.requester }}</a>
-<p>
-  Description:<br>
-  {{ object.description }}
-</p>
-{% include "includes/notifications.html" %}
+<div class="container">
+  <h1 class="text-center">Task - {{ object.name }}</h1>
+  <div class="text-center text-secondary">
+    <a href="{{ object.project.working_team.get_absolute_url }}" class="link-secondary link-opacity-50-hover link-underline-opacity-0">{{ object.project.working_team.name }}</a>
+    •
+    <a href="{{ object.project.get_absolute_url }}" class="link-secondary link-opacity-50-hover link-underline-opacity-0">{{ object.project.name }}</a>
+  </div>
+  <div class="text-center my-3">
+    {% if object.is_completed %}
+      <h4 class="alert alert-success col-12 col-md-6 mx-auto">Completed</h4>
+    {% else %}
+      {% if not task.is_completed and user == task.requester %}
+        <a href="{% url 'task_manager:task-mark-as-completed' team_slug=task.project.working_team.slug project_slug=task.project.slug task_id=task.id %}" class="btn btn-outline-primary">Mark as completed</a>
+      {% elif not task.is_completed and user in task.assignees.all %}
+        <a href="{% url 'task_manager:task-request-review' team_slug=task.project.working_team.slug project_slug=task.project.slug task_id=task.id %}" class="btn btn-outline-primary">Request review</a>
+      {% endif %}
+      {% if user == object.requester %}
+        <a href="{% url 'task_manager:task-update' team_slug=object.project.working_team.slug project_slug=object.project.slug task_id=object.id %}" class="btn btn-outline-warning">✏️</a>
+        <a href="{% url 'task_manager:task-delete' team_slug=object.project.working_team.slug project_slug=object.project.slug task_id=object.id %}" class="btn btn-outline-danger">🗑️</a>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div class="text-center col-12 col-md-6 mx-auto">
+    <div>
+      Tags:
+      {% for tag in object.tags.all %}
+        <div class="btn btn-outline-secondary disabled p-0 px-2">{{ tag.name }}</div>
+      {% empty %}w
+        <span class="text-secondary">No tags</span>
+      {% endfor %}
+    </div>
+    <div>Deadline: {{ object.deadline }}</div>
+    <div>Priority: <span class="priority priority-{{ object.get_priority_display.lower }}">{{ object.get_priority_display }}</span></div>
+    <div>Task type: {{ object.task_type.name }}</div>
+    <div>
+      <div class="mt-1">
+        <div class="d-block d-md-inline">Assignees:</div>
+        {% for assignee in object.assignees.all %}
+          <div class="btn-group mb-1">
+            <div class="btn btn-outline-primary disabled p-0 px-2">{{ assignee.position.name }}</div>
+            <a href="{{ assignee.get_absolute_url }}" class="btn btn-outline-primary p-0 px-2">
+              {{ assignee.first_name }} {{ assignee.last_name }}
+            </a>
+          </div>
+        {% empty %}
+          <span class="text-secondary">No assignees</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      Requester:
+      <a href="{{ object.requester.get_absolute_url }}" class="btn btn-outline-primary p-0 px-2">
+        {{ object.requester.first_name }} {{ object.requester.last_name }}
+      </a>
+    </div>
+  </div>
+  <div class="container mt-5 fs-5 overflow-x-hidden">
+    {% if object.description %}
+      {{ object.description|safe }}
+    {% else %}
+      <h2 class="text-center text-secondary">Has no description</h2>
+    {% endif %}
+  </div>
+</div>
 {% endblock content %}

@@ -14,5 +14,7 @@
   {% else %}
     <h1 class="text-center">Task {{ object|yesno:"Update,Request" }} Form</h1>
   {% endif %}
-  <div class="text-center text-secondary">Project: {{ project.name }}</div>
+  <div class="text-center text-secondary">
+    Project: {% if object %}{{ object.project.name }}{% else %}{{ project.name }}{% endif %}
+  </div>
 {% endblock form_title %}

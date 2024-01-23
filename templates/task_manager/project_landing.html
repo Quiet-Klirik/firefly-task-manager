@@ -44,15 +44,19 @@
                 </a>
               </div>
             {% empty %}
-              no members
+              <span class="text-secondary">No members</span>
             {% endfor %}
           </div>
         </div>
       </div>
     </div>
   </header>
-  <div class="container py-5 fs-5">
-    {{ object.description|safe }}
+  <div class="container py-5 fs-5 overflow-x-hidden">
+    {% if object.description %}
+      {{ object.description|safe }}
+    {% else %}
+      <h2 class="text-center text-secondary">Has no description</h2>
+    {% endif %}
   </div>
   {% include 'includes/footer.html' %}
 </body>
