@@ -1,5 +1,27 @@
 {% extends "base.html" %}
-{% block content %}
-  {{ object.username }}
+{% block title %}{{ object.first_name }} {{ object.last_name }}`s Profile{% endblock title %}
+
+{% block navbar_items %}
   {% include "includes/notifications.html" %}
+{% endblock navbar_items %}
+
+{% block content %}
+  <div class="container">
+    <div class="d-flex justify-content-between">
+      <h1>{{ object.first_name }} {{ object.last_name }}</h1>
+      {% if object == user %}
+        <div><a href="{% url 'profile-delete' %}" class="btn btn-outline-danger fs-5">Delete profile</a></div>
+      {% endif %}
+    </div>
+    {% if object == user %}
+    <div class="btn-group">
+      <a href="{% url 'profile-edit' %}" class="btn btn-outline-primary fs-5">Edit profile</a>
+      <a href="{% url 'password_change' %}" class="btn btn-outline-primary fs-5">Change password</a>
+    </div>
+    {% endif %}
+    <div class="fs-5 my-4">
+      <div><span class="fw-medium">Username:</span> {{ object.username }}</div>
+      <div><span class="fw-medium">Position:</span> {{ object.position.name }}</div>
+    </div>
+  </div>
 {% endblock content %}
