@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ object.name }}{% endblock title %}
+{% block title %}Notifications{% endblock title %}
 {% load crispy_forms_filters %}
 
 {% block content %}
@@ -29,7 +29,7 @@
           <small class="fw-normal">{{ notification.sent_at }}</small>
         </a>
       {% empty %}
-        <h2 class="text-center text-secondary">You don't have any notifications</h2>
+        <h2 class="text-center text-secondary mt-5">There are no notifications</h2>
       {% endfor %}
     </div>
     {% include 'includes/pagination.html' %}
