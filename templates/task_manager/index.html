@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Firefly</title>
   {% load static %}
+  <link rel="icon" href="{% static 'imgs/logo/logo_image.svg' %}">
   {% include "includes/bootstrap_headers.html" %}
   <link rel="stylesheet" href="{% static 'css/task_manager/index_page.css' %}">
 </head>
@@ -16,7 +17,7 @@
         <div class="row">
           <div class="col-4 col-md-6">
             <div class="logo">
-              <img src="/static/imgs/logo/logo_logo.svg">
+              <img src="/static/imgs/logo/logo_image.svg">
               <img class="d-none d-sm-inline" src="/static/imgs/logo/logo_text.svg">
             </div>
           </div>
@@ -40,7 +41,7 @@
     </div>
   </header>
 
-  <section class="section-1">
+  <section id="management-capabiliries" class="section-1">
     <div class="container">
       <div class="row">
         <div class="col-4 d-none d-md-block">
@@ -59,7 +60,7 @@
     </div>
   </section>
 
-  <section class="section-2">
+  <section id="flexibly-and-safety"  class="section-2">
     <div class="container">
       <div class="row">
         <div class="col-4 d-none d-md-block">
@@ -84,17 +85,19 @@
           </div>
         <div class="col-12 col-md-6">
           <h1 class="text-center text-md-start mb-4">User-Friendly Experience</h1>
-          <p class="text-justify fs-5">
+          <p class="section-3__text text-justify fs-5">
             Firefly is developed for simplicity and efficiency. Without unnecessary features and complex configurations—simply work with your tasks without unnecessary headaches.
           </p>
         </div>
       </div>
       <div class="row">
-        <p class="text-center fs-3 mt-5">
+        <p class="text-center fs-3">
           Join Firefly Task Manager today and provide your team with a tool that helps you achieve great results!
         </p>
       </div>
   </section>
+
+  {% include 'includes/footer.html' %}
 
 </body>
 </html>
