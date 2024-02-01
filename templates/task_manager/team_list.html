@@ -1,29 +1,82 @@
 {% extends "base.html" %}
+{% block title %}Teams{% endblock title %}
+
+{% block navbar_items %}
+  {% include "includes/notifications.html" %}
+{% endblock navbar_items %}
+
+{% block content_properties %}class="main pt-2"{% endblock %}
+
 {% block content %}
-<h2>
-  Involved teams
-</h2>
-<ul>
-  {% for team in involved_teams %}
-    <li>
-      <a href="{% url 'task_manager:team-detail' team_slug=team.slug %}">{{ team.name }}</a>
-    </li>
-  {% empty %}
-    <h3>There are no involved teams</h3>
-  {% endfor %}
-</ul>
-<h2>
-  Founded teams
-</h2>
-<ul>
-  {% for team in founded_teams %}
-    <li>
-      <a href="{% url 'task_manager:team-detail' team_slug=team.slug %}">{{ team.name }}</a>
-    </li>
-  {% endfor %}
-  <li>
-    <a href="{% url 'task_manager:team-create' %}">+</a>
-  </li>
-</ul>
-{% include "includes/notifications.html" %}
+<nav>
+  <div class="nav nav-tabs justify-content-center" id="nav-tab" role="tablist">
+    <button
+      class="nav-link active"
+      id="nav-involved-tab"
+      data-bs-toggle="tab"
+      data-bs-target="#nav-involved"
+      type="button"
+      role="tab"
+      aria-controls="nav-involved"
+      aria-selected="true"
+    >
+      Involved teams
+    </button>
+    <button
+      class="nav-link"
+      id="nav-founded-tab"
+      data-bs-toggle="tab"
+      data-bs-target="#nav-founded"
+      type="button"
+      role="tab"
+      aria-controls="nav-founded"
+      aria-selected="false"
+    >
+      Founded teams
+    </button>
+  </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade show active" id="nav-involved" role="tabpanel" aria-labelledby="nav-involved-tab" tabindex="0">
+    <ul class="list-group list-group-flush">
+      {% for team in involved_teams %}
+        <li class="list-group-item p-0">
+          <a
+            href="{% url 'task_manager:team-detail' team_slug=team.slug %}"
+            class="list-group-item list-group-item-action border-0"
+            >
+              <h5><div class="d-inline d-md-none link-primary">[Open]</div> {{ team.name }}</h5>
+              {% for project in team.projects.all %}
+                <div class="btn btn-outline-secondary p-0 px-2">{{ project.name }}</div>
+              {% endfor %}
+            </a>
+        </li>
+      {% empty %}
+        <h3 class="text-center mt-5">You are not involved in any team</h3>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="tab-pane fade" id="nav-founded" role="tabpanel" aria-labelledby="nav-founded-tab" tabindex="0">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item text-center">
+        <a href="{% url 'task_manager:team-create' %}" class="btn btn-outline-primary">Found a new team</a>
+      </li>
+      {% for team in founded_teams %}
+        <li class="list-group-item p-0">
+          <a
+            href="{% url 'task_manager:team-detail' team_slug=team.slug %}"
+            class="list-group-item list-group-item-action border-0"
+            >
+              <h5><div class="d-inline d-md-none link-primary">[Open]</div> {{ team.name }}</h5>
+              {% for project in team.projects.all %}
+                <div class="btn btn-outline-secondary p-0 px-2">{{ project.name }}</div>
+              {% empty %}
+                <div class="text-secondary">Does not have any projects</div>
+              {% endfor %}
+            </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
 {% endblock content %}

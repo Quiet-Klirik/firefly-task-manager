@@ -8,9 +8,9 @@
     {% endif %}
     {% for page in paginator.page_range %}
       {% if page_obj.number == page %}
-        <li class="page-num selected">{{ page }}</li>
+        <li class="page-item page-link active">{{ page }}</li>
       {% elif page >= page_obj.number|add:-2 and page <= page_obj.number|add:2 %}
-        <li class="page-num">
+        <li class="page-item">
           <a href="{% block page_href %}?{% query_transform request page=page %}{% endblock %}" class="page-link">{{ page }}</a>
         </li>
       {% endif %}

@@ -1,0 +1,20 @@
+.header {
+	background-image: url("/static/imgs/note.jpg");
+	background-position: center 75%;
+	background-repeat: no-repeat;
+	background-size: auto;
+}
+
+@media screen and (min-width: 992px) {
+	.header {
+		background-size: 100%;
+	}
+}
+
+.header__container {
+	background: rgba(255, 255, 255, 0.4);
+}
+
+.project-card {
+	height: 200px;
+}

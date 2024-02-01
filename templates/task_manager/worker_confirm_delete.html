@@ -1,1 +1,5 @@
 {% extends "base_confirm.html" %}
+{% block object_name %}your profile "{{ object.username }}"{% endblock object_name %}
+{% block additional_text %}
+	<div class="alert alert-danger fs-5 mt-3">It will be deleted permanently. You will not be able to restore it.</div>
+{% endblock additional_text %}

@@ -1,14 +1,20 @@
-{% extends "base_form.html" %}
-{% block extra_headers %}
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <style>
-    select {
-        min-width: 500px;
-    }
-  </style>
-{% endblock extra_headers %}
-{% block after_form %}
-	{{ form.media.js }}
-{% endblock %}
+{% extends "base_form_select2.html" %}
+
+{% block title %}
+  {% if assignee %}
+    Task Assign
+  {% else %}
+    Task {{ object|yesno:"Update,Create" }}
+  {% endif %}
+{% endblock title %}
+
+{% block form_title %}
+  {% if assignee %}
+    <h1 class="text-center">Assign a Task for {{ assignee.first_name }} {{ assignee.last_name }}</h1>
+  {% else %}
+    <h1 class="text-center">Task {{ object|yesno:"Update,Request" }} Form</h1>
+  {% endif %}
+  <div class="text-center text-secondary">
+    Project: {% if object %}{{ object.project.name }}{% else %}{{ project.name }}{% endif %}
+  </div>
+{% endblock form_title %}

@@ -14,20 +14,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
-from django.views.decorators.cache import cache_page
 
 from task_manager.views import (
     UserRegisterView,
-    UserProfileDetailView, UserProfileEditView, UserDeleteView, IndexView
+    UserProfileDetailView,
+    UserProfileEditView,
+    UserDeleteView,
+    IndexView
 )
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("-/", include("task_manager.urls", namespace="task_manager")),
-    path("", cache_page(60**2 * 3)(IndexView.as_view()), name="index"),
+    path("", IndexView.as_view(), name="index"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/register/", UserRegisterView.as_view(), name="register"),
     path(
@@ -51,7 +54,7 @@ urlpatterns = [
         name="profile-delete"
     ),
     path("select2/", include("django_select2.urls")),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:
     urlpatterns += [

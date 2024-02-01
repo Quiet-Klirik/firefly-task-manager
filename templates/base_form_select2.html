@@ -1,0 +1,7 @@
+{% extends "base_form.html" %}
+{% block extra_headers %}
+  {% include 'includes/select2_headers.html' %}
+{% endblock extra_headers %}
+{% block after_form %}
+	{{ form.media.js }}
+{% endblock after_form %}

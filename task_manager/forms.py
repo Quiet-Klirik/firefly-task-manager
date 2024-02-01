@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Q
 from django.forms import ModelForm
 from django_select2.forms import (
     ModelSelect2TagWidget,
@@ -66,7 +67,7 @@ class ProjectForm(ModelForm):
         fields = "__all__"
 
     working_team = forms.ModelChoiceField(
-        queryset=None, widget=forms.HiddenInput, required=False
+        queryset=Team.objects.all(), widget=forms.HiddenInput, required=False
     )
 
 
@@ -191,8 +192,8 @@ class NotificationFilterByTeamForm(forms.Form):
         if user_id:
             team_queryset = self.fields["team"].queryset
             self.fields["team"].queryset = team_queryset.filter(
-                members__id=user_id,
-            )
+                Q(founder_id=user_id) | Q(members__id=user_id),
+            ).distinct()
 
     team = forms.ModelChoiceField(
         queryset=Team.objects.all(),

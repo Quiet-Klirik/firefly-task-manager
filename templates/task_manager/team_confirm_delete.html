@@ -1,1 +1,5 @@
 {% extends "base_confirm.html" %}
+{% block object_name %}Team "{{ object.name }}"{% endblock object_name %}
+{% block additional_text %}
+	<div class="alert alert-danger fs-5 mt-3">All projects created for this team will be deleted as well</div>
+{% endblock additional_text %}

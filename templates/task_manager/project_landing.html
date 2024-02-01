@@ -1,10 +1,63 @@
-{% extends "base.html" %}
-{% block content %}
-<h1>{{ object.name }}</h1>
-Founder: {{ object.working_team.founder }}<br>
-Working team: {{ object.working_team.name }}<br>
-Workers: {% for member in object.working_team.members.all %}{{ member }}, {% empty %}No members{% endfor %}
-<p>
-  {{ object.description }}
-</p>
-{% endblock content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ object.name }} [ landing ]</title>
+  {% load static %}
+  <link rel="icon" href="{% static 'imgs/logo/logo_image.svg' %}">
+  {% include "includes/bootstrap_headers.html" %}
+  <link rel="stylesheet" href="{% static 'css/task_manager/project_landing.css' %}">
+</head>
+<body>
+  <header class="header">
+    <div class="header__container">
+      <div class="container py-5">
+        <div class="d-flex justify-content-between">
+          <h1>{{ object.name }}</h1>
+          {% if user in object.working_team.members.all or user == object.working_team.founder %}
+            <div>
+              <a href="{{ object.get_absolute_url }}" class="btn btn-outline-primary fs-5">Project page</a>
+            </div>
+          {% endif %}
+        </div>
+        <div class="my-4">
+          <div>
+            Working team :
+            <a href="{{ object.working_team.get_absolute_url }}" class="btn btn-outline-primary p-0 px-2">
+              {{ object.working_team.name }}
+            </a>
+          </div>
+          <div class="mt-1">
+            Founder :
+            <a href="{{ object.working_team.founder.get_absolute_url }}" class="btn btn-outline-primary p-0 px-2">
+              {{ object.working_team.founder.first_name }} {{ object.working_team.founder.last_name }}
+            </a>
+          </div>
+          <div class="mt-1">
+            <div class="d-block d-md-inline">Members :</div>
+            {% for member in object.working_team.members.all %}
+              <div class="btn-group mb-1">
+                <div class="btn btn-outline-primary disabled p-0 px-2">{{ member.position.name }}</div>
+                <a href="{% url 'profile' slug=member.username %}" class="btn btn-outline-primary p-0 px-2">
+                  {{ member.first_name }} {{ member.last_name }}
+                </a>
+              </div>
+            {% empty %}
+              <span class="text-secondary">No members</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="container py-5 fs-5 overflow-x-hidden">
+    {% if object.description %}
+      {{ object.description|safe }}
+    {% else %}
+      <h2 class="text-center text-secondary">Has no description</h2>
+    {% endif %}
+  </div>
+  {% include 'includes/footer.html' %}
+</body>
+</html>
