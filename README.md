@@ -2,6 +2,8 @@
 
 An indie web project for simple task management in development teams.
 
+![image](./readme_assets/index.png)
+
 Tech stack: [python3](https://www.python.org/downloads/release/python-3100/), [Django4](https://docs.djangoproject.com/en/4.2/), [django-taggit](https://django-taggit.readthedocs.io/en/stable/), [django-select2](https://django-select2.readthedocs.io/en/8.1.2/), [django signals](https://docs.djangoproject.com/en/4.2/topics/signals/), [Bootstrap5](https://getbootstrap.com/docs/5.3/getting-started/introduction/), [crispy-bootstrap5](https://pypi.org/project/crispy-bootstrap5/)
 
 ## Project features:
