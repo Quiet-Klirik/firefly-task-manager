@@ -29,7 +29,7 @@ from task_manager.views import (
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("-/", include("task_manager.urls", namespace="task_manager")),
+    path("management/", include("task_manager.urls", namespace="task_manager")),
     path("", IndexView.as_view(), name="index"),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/register/", UserRegisterView.as_view(), name="register"),
