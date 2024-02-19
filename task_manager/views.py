@@ -33,12 +33,12 @@ from task_manager.models import Team, Project, Worker, Task, Notification
 class IndexView(generic.TemplateView):
     template_name = "task_manager/index.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["teams_count"] = Team.objects.count()
-        context["projects_count"] = Project.objects.count()
-        context["workers_count"] = Worker.objects.count()
-        return context
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     context["teams_count"] = Team.objects.count()
+    #     context["projects_count"] = Project.objects.count()
+    #     context["workers_count"] = Worker.objects.count()
+    #     return context
 
 
 class UserRegisterView(generic.CreateView):
@@ -144,7 +144,6 @@ class TeamUpdateView(
 
     def get_initial(self):
         initial = super().get_initial()
-        print(Worker.objects.filter(id=self.get_founder().id))
         initial["members_queryset"] = (
             self.get_object().members.select_related("position") | Worker.objects.filter(id=self.get_founder().id)
         ).distinct()
