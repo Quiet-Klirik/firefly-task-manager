@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from django.urls import reverse
 
-from task_manager.models import Team, Project, Worker
+# from task_manager.models import Team, Project, Worker
 from .utils import assert_url_access
 
 
