@@ -1,4 +1,4 @@
-# Firefly Task Manager
+# Firefly Task Manager [[Open Site]](https://firefly-task-manager.onrender.com)
 
 An indie web project for simple task management in development teams.
 
