@@ -13,6 +13,9 @@ Tech stack: [python3](https://www.python.org/downloads/release/python-3100/), [D
  - Notification system [based on the django signals] with filtering for current Team/Project.
  - User-friendly multiselect inputs with autocompleting.
 
+## Database structure
+![image](./readme_assets/db_structure.png)
+
 ## Installing and settings
 
 You must have installed Python 3.10.0 or above<br>
